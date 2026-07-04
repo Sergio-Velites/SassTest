@@ -206,6 +206,15 @@ importers:
 
   packages/workflow-engine:
     dependencies:
+      '@flowhub/ai-gateway':
+        specifier: workspace:*
+        version: link:../ai-gateway
+      '@flowhub/connectors':
+        specifier: workspace:*
+        version: link:../connectors
+      '@flowhub/observability':
+        specifier: workspace:*
+        version: link:../observability
       '@flowhub/shared':
         specifier: workspace:*
         version: link:../shared

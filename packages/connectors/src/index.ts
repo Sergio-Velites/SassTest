@@ -9,3 +9,4 @@
  */
 
 export * from './connector.js';
+export * from './mocks.js';

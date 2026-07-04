@@ -20,7 +20,7 @@ Objetivo de negocio: suscripción SaaS (Free → Enterprise) + comisión de mark
 
 ## 2. Estado actual del proyecto
 
-**Fase actual: Ciclo 5 COMPLETADO; siguiente = Ciclo 6 (workflow engine + worker)** — monorepo, docs,
+**Fase actual: Ciclo 6 EN CURSO (executor + handlers + mocks hechos; falta el wiring del worker)** — monorepo, docs,
 tipos core, CI, las tres apps arrancan (`pnpm dev`) y la base de datos está implementada:
 27 tablas Drizzle migradas y sembradas (`pnpm db:reset`). **La API de dominio está completa (auth, organizations, catálogo, workflows, ejecuciones, approvals — todo encolando vía JobQueue); faltan el motor que consume los jobs, los conectores mock y la UI real** — especificados en docs, llegan en
 los ciclos siguientes (ver §12 y `docs/product/BACKLOG.md`).
@@ -29,9 +29,9 @@ Lo que existe y funciona:
 
 - Monorepo pnpm workspaces + Turborepo. `pnpm build/lint/typecheck/test` en verde.
 - `packages/shared`: IDs branded, `Result`, `AppError`, `TenantContext` + `assertSameTenant`. Con tests.
-- `packages/workflow-engine`: schema Zod del JSON de workflows, tipos de ejecución, contrato `NodeHandler`. Con tests.
+- `packages/workflow-engine`: schema Zod del JSON + **executor re-entrante completo** (`runExecution`): 7 handlers de nodo, interpolación, condiciones seguras, reintentos con backoff, pausas por wait/approval con reanudación por rama. Persistencia vía puerto `ExecutionStore` (implementación Drizzle en el worker; `InMemoryExecutionStore` para tests). Con 12 tests.
 - `packages/ai-gateway`: contrato `AiProvider` + `MockAiProvider` determinista. Con tests.
-- `packages/connectors`: contrato `Connector` (mocks reales llegan en Ciclo 6).
+- `packages/connectors`: contrato `Connector` + 6 mocks deterministas (gmail, slack, drive, accounting, http-generic eco, webhook-inbound) y `createMockConnectorRegistry()`.
 - `packages/observability`: `Logger` estructurado sobre **pino** + `redact()` de secretos, destination inyectable para tests. Con tests.
 - `packages/config`: `loadEnv()` validado con Zod.
 - `apps/api`: Fastify real con helmet/CORS/rate-limit/swagger (`/docs`), `/health`, error handler `AppError`→HTTP, y **auth completa**: `/auth/register|login|logout|me|switch-organization` (argon2id, sesiones server-side en tabla `sessions`, cookie firmada httpOnly). Middleware `requireAuth(db)` + `requireTenant(minRole)` en `src/plugins/auth.ts` — TODO endpoint de dominio nuevo debe componer ambos. La API exige DATABASE_URL y AUTH_SESSION_SECRET al arrancar. Tests con inject + BD viva (skip sin DATABASE_URL). Nota: `fastify-type-provider-zod` fijado a `^4` (v7 exige zod 4).

@@ -42,13 +42,13 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 
 ## ⬜ Ciclo 6 — Workflow engine + worker
 
-- [ ] Executor: recorre el grafo, persiste `workflow_executions` + steps + logs, maneja branches de condición.
-- [ ] Handlers: trigger manual, transform, condition, wait (corto), approval (crea approval_request y pausa/reanuda), action (via connectors), ai (via ai-gateway mock).
-- [ ] Conectores mock: gmail-mock, slack-mock, drive-mock, http-generic, webhook-inbound.
-- [ ] Reintentos con backoff para fallos `retryable`; idempotencia por `(execution_id, node_id, attempt)`.
+- [x] Executor re-entrante en `packages/workflow-engine` (`runExecution`): recorre el grafo, branches, snapshots de contexto, puerto `ExecutionStore` (el engine no toca BD; el worker aporta la implementación Drizzle), `InMemoryExecutionStore` para tests.
+- [x] Handlers de los 7 kinds: trigger, transform (assign interpolado), condition (evaluador seguro sin eval), wait (pausa + resume por timestamp), approval (crea request, pausa, reanuda por rama approved/rejected/expired), action (registro de conectores), ai (provider mock; gateway completo en C8). Interpolación `{{nodes.*}}/{{variables.*}}/{{trigger.*}}` con lookup puro.
+- [x] Conectores mock: gmail-mock, slack-mock, drive-mock, accounting-mock, http-generic (eco, sin red real hasta tener allowlist anti-SSRF), webhook-inbound + `createMockConnectorRegistry()`.
+- [x] Reintentos con backoff exponencial 5s/25s/125s (máx 3, configurable por nodo, sleep inyectable), pasos succeeded nunca se re-ejecutan (idempotencia por (execution, node) + snapshots).
 - [ ] Worker BullMQ consumiendo jobs de ejecución; API encola vía `JobQueue`.
 - [ ] Workflow demo Invoice Intake completo end-to-end en local (seed).
-- [ ] Tests del executor (caminos felices, fallos, reintentos, aprobación).
+- [x] 8 tests del executor: Invoice Intake en sus 4 caminos (auto-registro, aprobación→register, rechazo, no-factura), reintentos agotados y con recuperación, wait con reloj falso, override de variables por instalación.
 
 ## ⬜ Ciclo 7 — Frontend MVP
 

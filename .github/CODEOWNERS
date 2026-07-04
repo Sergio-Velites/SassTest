@@ -1,0 +1,8 @@
+# Default owner for everything in the repo.
+# Update as the team grows: security/ and infra/ should gain dedicated owners.
+* @Sergio-Velites
+
+# Security-sensitive areas — always require owner review
+/docs/security/ @Sergio-Velites
+/infra/ @Sergio-Velites
+/.github/ @Sergio-Velites

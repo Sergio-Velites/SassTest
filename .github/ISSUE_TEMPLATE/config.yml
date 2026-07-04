@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Vulnerabilidad de seguridad
+    url: https://github.com/Sergio-Velites/SassTest/security/advisories/new
+    about: No abras issues públicas para vulnerabilidades — usa un security advisory privado (ver SECURITY.md).

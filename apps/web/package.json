@@ -1,0 +1,14 @@
+{
+  "name": "@flowhub/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FlowHub AI web frontend (Next.js App Router — scaffolded in Cycle 3, built out in Cycle 7)",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "node --test dist/",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@flowhub/observability",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Structured logging, log sanitization and audit event helpers for FlowHub AI",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "node --test dist/",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+  }
+}

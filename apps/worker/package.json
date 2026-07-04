@@ -1,0 +1,17 @@
+{
+  "name": "@flowhub/worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FlowHub AI background worker (BullMQ consumer behind JobQueue abstraction — built out in Cycle 6)",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "node --test dist/",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@flowhub/shared": "workspace:*"
+  }
+}

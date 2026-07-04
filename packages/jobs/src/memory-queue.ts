@@ -21,6 +21,9 @@ export class InMemoryJobQueue implements JobQueue {
   /** Errors thrown by handlers, exposed for test assertions. */
   readonly failures: Array<{ type: JobType; payload: JobPayload; error: unknown }> = [];
 
+  /** Every accepted (non-deduplicated) enqueue, for test assertions. */
+  readonly history: Array<{ type: JobType; payload: JobPayload }> = [];
+
   async enqueue(type: JobType, payload: JobPayload, opts?: EnqueueOptions): Promise<string> {
     jobPayloadSchema.parse(payload);
     if (opts?.idempotencyKey) {
@@ -29,6 +32,7 @@ export class InMemoryJobQueue implements JobQueue {
       this.seenKeys.add(key);
     }
     const id = `mem-${++this.counter}`;
+    this.history.push({ type, payload });
     const timer = setTimeout(() => {
       this.timers.delete(timer);
       void this.dispatch(type, payload);

@@ -20,9 +20,9 @@ Objetivo de negocio: suscripción SaaS (Free → Enterprise) + comisión de mark
 
 ## 2. Estado actual del proyecto
 
-**Fase actual: Ciclo 5 EN CURSO (auth + tenant middleware hechos)** — monorepo, docs,
+**Fase actual: Ciclo 5 COMPLETADO; siguiente = Ciclo 6 (workflow engine + worker)** — monorepo, docs,
 tipos core, CI, las tres apps arrancan (`pnpm dev`) y la base de datos está implementada:
-27 tablas Drizzle migradas y sembradas (`pnpm db:reset`). **Hay auth completa (sesiones server-side + cookie firmada) y middleware de tenant; faltan los endpoints de organizations/workflows/executions, la UI real y el motor** — especificados en docs, llegan en
+27 tablas Drizzle migradas y sembradas (`pnpm db:reset`). **La API de dominio está completa (auth, organizations, catálogo, workflows, ejecuciones, approvals — todo encolando vía JobQueue); faltan el motor que consume los jobs, los conectores mock y la UI real** — especificados en docs, llegan en
 los ciclos siguientes (ver §12 y `docs/product/BACKLOG.md`).
 
 Lo que existe y funciona:

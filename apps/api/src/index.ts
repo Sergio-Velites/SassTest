@@ -1,5 +1,6 @@
 import { loadEnv } from '@flowhub/config';
 import { createDb } from '@flowhub/database';
+import { BullMqJobQueue, InMemoryJobQueue } from '@flowhub/jobs';
 import { createLogger } from '@flowhub/observability';
 
 import { buildApp } from './app.js';
@@ -13,7 +14,16 @@ if (!env.DATABASE_URL) {
 }
 
 const dbHandle = createDb(env.DATABASE_URL);
-const app = await buildApp({ env, logger, db: dbHandle.db });
+let queue;
+if (env.REDIS_URL) {
+  queue = new BullMqJobQueue(env.REDIS_URL);
+} else {
+  // Executions enqueue into memory and are lost on restart — fine for a dev
+  // API without the worker, never acceptable in production.
+  queue = new InMemoryJobQueue();
+  logger.warn('REDIS_URL not set — using in-memory job queue (jobs are not durable)');
+}
+const app = await buildApp({ env, logger, db: dbHandle.db, queue });
 
 try {
   await app.listen({ host: env.API_HOST, port: env.API_PORT });
@@ -31,6 +41,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     logger.info('shutting down', { signal });
     void app
       .close()
+      .then(() => queue.close())
       .then(() => dbHandle.close())
       .then(() => process.exit(0))
       .catch(() => process.exit(1));

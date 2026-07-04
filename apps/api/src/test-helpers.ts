@@ -1,5 +1,6 @@
 import { loadEnv } from '@flowhub/config';
 import { createDb, type DbHandle } from '@flowhub/database';
+import { InMemoryJobQueue } from '@flowhub/jobs';
 import { createLogger } from '@flowhub/observability';
 import { AppError } from '@flowhub/shared';
 import type { FastifyInstance } from 'fastify';
@@ -15,6 +16,8 @@ export const skipWithoutDb = databaseUrl
 export interface TestApp {
   app: FastifyInstance;
   handle: DbHandle;
+  /** Inspectable in-memory queue — tests can assert what was enqueued. */
+  queue: InMemoryJobQueue;
   close(): Promise<void>;
 }
 
@@ -26,10 +29,12 @@ export async function createTestApp(): Promise<TestApp> {
     ...(databaseUrl ? { DATABASE_URL: databaseUrl } : {}),
   });
   const handle = createDb(databaseUrl as string, { maxConnections: 3 });
+  const queue = new InMemoryJobQueue();
   const app = await buildApp({
     env,
     logger: createLogger('error', { app: 'api-test' }),
     db: handle.db,
+    queue,
   });
   // Route raising a typed domain error, to exercise the error handler.
   app.get('/boom', () => {
@@ -38,8 +43,10 @@ export async function createTestApp(): Promise<TestApp> {
   return {
     app,
     handle,
+    queue,
     close: async () => {
       await app.close();
+      await queue.close();
       await handle.close();
     },
   };

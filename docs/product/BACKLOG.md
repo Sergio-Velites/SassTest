@@ -30,15 +30,15 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 - [x] `pnpm db:reset` (scripts/db-reset.sh): drop + migrate + seed, verificado end-to-end.
 - [x] Tests contra Postgres vivo (aislamiento de tenant, índice parcial único, CHECK constraints) que se saltan sin DATABASE_URL; CI levanta postgres:16 como service y aplica migraciones antes de testear.
 
-## ⬜ Ciclo 5 — API base
+## ✅ Ciclo 5 — API base (COMPLETADO)
 
 - [x] Auth: register/login/logout/me/switch-organization con argon2id, sesión server-side (tabla `sessions`, migración 0001, token opaco hasheado sha256, expiración deslizante 7d, revocación en logout) y cookie firmada httpOnly SameSite=Lax. Rate limit 10/min en `/auth/*`. Mismo error para email desconocido y password mal (sin account probing).
 - [x] Middleware de tenant: `requireAuth(db)` resuelve sesión y re-valida membresía en cada request; `requireTenant(minRole)` fail-closed con jerarquía viewer<member<admin<owner. Cross-tenant responde NOT_FOUND.
 - [x] Organizations: crear (activa el tenant en sesión, membership owner, subscription free), current, members; invitaciones con token hasheado + accept (un solo uso, expiración 7d). Todo con audit log.
-- [~] Endpoints: catálogo (solo templates published, con versiones), instalar workflow (copia la definición, solo versiones publicadas), crear workflow desde JSON (validado por el engine con errores claros), listar/detalle de installed workflows. **Faltan: ejecuciones (lanzar/listar/steps/logs) y approvals** — dependen del enqueue vía JobQueue (siguiente bloque).
+- [x] Endpoints completos: catálogo, instalar workflow, crear desde JSON, listar/detalle installed; ejecuciones (lanzar manual con enqueue idempotente vía JobQueue, listar con filtro por workflow, detalle+context, steps, logs) y approvals (listar por estado, resolver con guard de rol/assignee, anti-doble-resolución y re-encolado de la ejecución).
 - [x] Audit log en acciones críticas: organization.created, member.invited, member.joined, workflow.installed, workflow.created_from_json, session.organization_switched (+ usage_events en instalación).
-- [ ] OpenAPI completo y validación Zod input/output en todos los endpoints.
-- [~] Tests de API con inject + BD viva: lifecycle de sesión, CONFLICT, cookies forjadas, aislamiento en switch-organization (10 tests). Faltan los tests de los endpoints de dominio restantes.
+- [x] OpenAPI completo en `/docs` y validación Zod de input/output en todos los endpoints (fastify-type-provider-zod).
+- [x] 19 tests de API con inject + BD viva: auth lifecycle, invitaciones, instalación, validación JSON, RBAC, aislamiento cross-tenant (workflows y ejecuciones), enqueue idempotente y resolución de approvals con re-encolado.
 
 ## ⬜ Ciclo 6 — Workflow engine + worker
 

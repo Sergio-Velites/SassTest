@@ -18,7 +18,7 @@ try {
   // are registered here when the engine executor lands in Cycle 6.
   logger.info('worker ready', { redis: 'connected', handlers: 0 });
 } catch (error) {
-  logger.error('worker failed to connect to redis', { message: (error as Error).message });
+  logger.error('worker failed to connect to redis', { error: (error as Error).message });
   process.exit(1);
 }
 

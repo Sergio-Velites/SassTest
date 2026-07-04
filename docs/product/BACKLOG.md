@@ -12,15 +12,15 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 - [x] CI: ci.yml (format/lint/typecheck/test/build) + security.yml (audit + gitleaks).
 - [x] Docs: CLAUDE.md, README, PRD, ARCHITECTURE, WORKFLOW_ENGINE, DATA_MODEL, SECURITY_MODEL, GCP_DEPLOYMENT, 9 ADRs, SECURITY.md, CONTRIBUTING.md, plantillas, CODEOWNERS, Dependabot.
 
-## ⬜ Ciclo 3 — Scaffold técnico real
+## ✅ Ciclo 3 — Scaffold técnico real (COMPLETADO)
 
-- [ ] `apps/web`: Next.js App Router + TS + Tailwind + shadcn/ui (página placeholder + healthcheck de API).
+- [x] `apps/web`: Next.js 15 App Router + TS + Tailwind 4 con página de estado + healthcheck de la API (client component). `output: 'standalone'` para Cloud Run. shadcn/ui se inicializa en el Ciclo 7 junto a la UI real.
 - [x] `apps/api`: Fastify + fastify-type-provider-zod + @fastify/swagger (OpenAPI en `/docs`), helmet headers, CORS desde env, rate limit básico, `/health`, error handler AppError→HTTP, tests con inject. (Nota: fastify-type-provider-zod fijado a ^4 mientras el workspace use zod 3; migrar a zod 4 + provider 7 como tarea de Ciclo 9.)
 - [x] `apps/worker`: proceso arrancable con conexión Redis (`queue.ready()` falla rápido con REDIS_URL inválida) y graceful shutdown. Sin handlers aún (llegan con el executor en Ciclo 6).
-- [ ] `packages/observability`: sustituir transporte console por pino manteniendo la interfaz `Logger`.
+- [x] `packages/observability`: transporte pino manteniendo la interfaz `Logger` (messageKey/level compatibles con Cloud Logging, destination inyectable para tests). 5 tests.
 - [x] Interfaz `JobQueue` en paquete propio `@flowhub/jobs` (enqueue/schedule/process/ready/close) + `BullMqJobQueue` (subconjunto portable de BullMQ) + `InMemoryJobQueue` para tests, con validación Zod de payloads y dedup por idempotencyKey. 6 tests.
-- [ ] `pnpm dev` levanta web+api+worker en paralelo (turbo).
-- [ ] Actualizar CI si hace falta (build de Next).
+- [x] `pnpm dev` levanta web+api+worker en paralelo (turbo). Requiere `pnpm db:up` y REDIS_URL (el worker hace fail-fast sin Redis, por diseño). `globalEnv` declarado en turbo.json (turbo strict env mode).
+- [x] CI revisado: `pnpm build` cubre `next build` sin cambios adicionales.
 
 ## ⬜ Ciclo 4 — Base de datos
 

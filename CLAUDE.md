@@ -20,10 +20,11 @@ Objetivo de negocio: suscripción SaaS (Free → Enterprise) + comisión de mark
 
 ## 2. Estado actual del proyecto
 
-**Fase actual: Ciclo 3 en curso** — Ciclos 1–2 completos (monorepo, documentación, tipos
-core, tooling, CI) y la API ya tiene scaffold Fastify real con `/health` y OpenAPI.
-**Aún no hay frontend real, base de datos, worker con jobs ni motor de ejecución** — todo
-está especificado en docs y llega en los ciclos siguientes (ver §12 y `docs/product/BACKLOG.md`).
+**Fase actual: Ciclo 3 COMPLETADO; siguiente = Ciclo 4 (base de datos)** — monorepo,
+documentación, tipos core, CI, y las tres apps arrancan de verdad (`pnpm dev` levanta
+web+api+worker; requiere `pnpm db:up` y REDIS_URL en el entorno). **Aún no hay base de
+datos, dominios de API, UI real ni motor de ejecución** — especificados en docs, llegan
+en los ciclos siguientes (ver §12 y `docs/product/BACKLOG.md`).
 
 Lo que existe y funciona:
 
@@ -32,12 +33,14 @@ Lo que existe y funciona:
 - `packages/workflow-engine`: schema Zod del JSON de workflows, tipos de ejecución, contrato `NodeHandler`. Con tests.
 - `packages/ai-gateway`: contrato `AiProvider` + `MockAiProvider` determinista. Con tests.
 - `packages/connectors`: contrato `Connector` (mocks reales llegan en Ciclo 6).
-- `packages/observability`: `Logger` estructurado + `redact()` de secretos. Con tests.
+- `packages/observability`: `Logger` estructurado sobre **pino** + `redact()` de secretos, destination inyectable para tests. Con tests.
 - `packages/config`: `loadEnv()` validado con Zod.
 - `apps/api`: **scaffold Fastify real** — plugins helmet/CORS/rate-limit/swagger (OpenAPI en `/docs`), `/health`, error handler que mapea `AppError`→HTTP (tabla en `src/app.ts`), tests con `inject()`. Arranca con `pnpm --filter @flowhub/api dev` (tsx watch). Nota: `fastify-type-provider-zod` fijado a `^4` (v7 exige zod 4; el workspace usa zod 3).
 - `packages/jobs`: abstracción `JobQueue` (ADR-0005) con `BullMqJobQueue` (Redis) e `InMemoryJobQueue` (tests). Payloads validados con Zod, dedup por idempotencyKey. Con tests.
 - `apps/worker`: **arrancable de verdad** — conecta a Redis vía `queue.ready()` (falla rápido sin REDIS_URL válida), logs estructurados y graceful shutdown verificado. Los handlers de jobs llegan con el executor (Ciclo 6).
-- `packages/database`, `packages/ui`, `apps/web`: **placeholders** compilables.
+- `apps/web`: **Next.js 15 real** (App Router, Tailwind 4, `output: 'standalone'`) con página de estado que hace healthcheck a la API. shadcn/ui se añade en Ciclo 7.
+- `packages/database`, `packages/ui`: **placeholders** compilables.
+- turbo.json declara `globalEnv` (turbo strict env mode): toda env var nueva debe añadirse ahí además de a `.env.example` y `packages/config`.
 - docker-compose con PostgreSQL 16 + Redis 7. CI en GitHub Actions (ci.yml + security.yml).
 
 ## 3. Arquitectura general
@@ -185,16 +188,16 @@ Modelo completo: `docs/security/SECURITY_MODEL.md`.
 
 ## 12. Próximas fases (resumen — detalle en docs/product/BACKLOG.md)
 
-| Ciclo | Contenido                                                                             | Estado      |
-| ----- | ------------------------------------------------------------------------------------- | ----------- |
-| 1–2   | Estructura, documentación, ADRs, tipos core, CI                                       | ✅ Hecho    |
-| 3     | Scaffold real: Next.js en `apps/web`, Fastify en `apps/api` ✅, pino en observability | 🔶 En curso |
-| 4     | `packages/database`: Drizzle, migraciones de las 23 tablas, seeds                     | ⬜          |
-| 5     | API base: auth simple, organizations, users, workflows, executions, logs              | ⬜          |
-| 6     | Workflow engine: executor, handlers de nodos, mocks de conectores, worker BullMQ      | ⬜          |
-| 7     | Frontend MVP: login, dashboard, catálogo, detalle de workflow/ejecución, logs         | ⬜          |
-| 8     | AI Gateway: providers reales opcionales (OpenAI/Anthropic), structured output         | ⬜          |
-| 9     | Hardening: tests, seguridad, rate limiting, CodeQL, revisión de deuda                 | ⬜          |
+| Ciclo | Contenido                                                                          | Estado   |
+| ----- | ---------------------------------------------------------------------------------- | -------- |
+| 1–2   | Estructura, documentación, ADRs, tipos core, CI                                    | ✅ Hecho |
+| 3     | Scaffold real: Next.js en `apps/web`, Fastify en `apps/api`, pino en observability | ✅ Hecho |
+| 4     | `packages/database`: Drizzle, migraciones de las 23 tablas, seeds                  | ⬜       |
+| 5     | API base: auth simple, organizations, users, workflows, executions, logs           | ⬜       |
+| 6     | Workflow engine: executor, handlers de nodos, mocks de conectores, worker BullMQ   | ⬜       |
+| 7     | Frontend MVP: login, dashboard, catálogo, detalle de workflow/ejecución, logs      | ⬜       |
+| 8     | AI Gateway: providers reales opcionales (OpenAI/Anthropic), structured output      | ⬜       |
+| 9     | Hardening: tests, seguridad, rate limiting, CodeQL, revisión de deuda              | ⬜       |
 
 **Decisiones pendientes** (resolver con el usuario cuando toque):
 

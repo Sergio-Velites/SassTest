@@ -2,13 +2,15 @@
  * @flowhub/observability — structured logging with mandatory sanitization.
  *
  * Rules (see docs/security/SECURITY_MODEL.md):
- * - Logs are structured JSON, one event per line.
+ * - Logs are structured JSON, one event per line (pino transport).
  * - Tokens, API keys, passwords and connector secrets are NEVER logged.
  *   redact() is applied to every log payload as defense-in-depth.
  * - Every log line in request/job scope carries organizationId for tenancy tracing.
  *
- * Cycle 3 replaces the console transport with pino; the Logger interface is stable.
+ * The Logger interface is stable; the transport (pino) is an implementation detail.
  */
+
+import { pino, type Logger as PinoLogger } from 'pino';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -40,29 +42,38 @@ export function redact(fields: LogFields): LogFields {
   return out;
 }
 
-const LEVEL_ORDER: Record<LogLevel, number> = { debug: 10, info: 20, warn: 30, error: 40 };
-
-export function createLogger(minLevel: LogLevel = 'info', baseFields: LogFields = {}): Logger {
-  const emit = (level: LogLevel, message: string, fields?: LogFields): void => {
-    if (LEVEL_ORDER[level] < LEVEL_ORDER[minLevel]) return;
-    const line = JSON.stringify({
-      level,
-      time: new Date().toISOString(),
-      message,
-      ...redact({ ...baseFields, ...fields }),
-    });
-    if (level === 'error' || level === 'warn') {
-      console.error(line);
-    } else {
-      // eslint-disable-next-line no-console -- console transport is the Cycle 2 placeholder for pino
-      console.log(line);
-    }
-  };
+function wrap(instance: PinoLogger): Logger {
   return {
-    debug: (m, f) => emit('debug', m, f),
-    info: (m, f) => emit('info', m, f),
-    warn: (m, f) => emit('warn', m, f),
-    error: (m, f) => emit('error', m, f),
-    child: (fields) => createLogger(minLevel, { ...baseFields, ...fields }),
+    debug: (message, fields) => instance.debug(fields ? redact(fields) : {}, message),
+    info: (message, fields) => instance.info(fields ? redact(fields) : {}, message),
+    warn: (message, fields) => instance.warn(fields ? redact(fields) : {}, message),
+    error: (message, fields) => instance.error(fields ? redact(fields) : {}, message),
+    child: (fields) => wrap(instance.child(redact(fields))),
   };
+}
+
+/**
+ * Creates a JSON logger. `destination` is injectable for tests; production
+ * writes to stdout, which Cloud Logging ingests directly (message/level keys
+ * are set to what Cloud Logging expects).
+ */
+export function createLogger(
+  minLevel: LogLevel = 'info',
+  baseFields: LogFields = {},
+  destination?: NodeJS.WritableStream,
+): Logger {
+  const instance = pino(
+    {
+      level: minLevel,
+      // Drop pid/hostname noise; Cloud Run adds instance metadata itself.
+      base: null,
+      messageKey: 'message',
+      timestamp: pino.stdTimeFunctions.isoTime,
+      formatters: {
+        level: (label) => ({ level: label }),
+      },
+    },
+    destination ?? process.stdout,
+  );
+  return wrap(instance.child(redact(baseFields)));
 }

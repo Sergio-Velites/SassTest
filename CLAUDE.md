@@ -20,10 +20,10 @@ Objetivo de negocio: suscripción SaaS (Free → Enterprise) + comisión de mark
 
 ## 2. Estado actual del proyecto
 
-**Fase completada: Ciclos 1–2 (+ scaffold del Ciclo 3)** — estructura de monorepo,
-documentación completa, tipos core del dominio, tooling y CI. **No hay aún API real,
-frontend real, base de datos ni motor de ejecución** — todo eso está especificado en docs
-y llega en los ciclos siguientes (ver §12 y `docs/product/BACKLOG.md`).
+**Fase actual: Ciclo 3 en curso** — Ciclos 1–2 completos (monorepo, documentación, tipos
+core, tooling, CI) y la API ya tiene scaffold Fastify real con `/health` y OpenAPI.
+**Aún no hay frontend real, base de datos, worker con jobs ni motor de ejecución** — todo
+está especificado en docs y llega en los ciclos siguientes (ver §12 y `docs/product/BACKLOG.md`).
 
 Lo que existe y funciona:
 

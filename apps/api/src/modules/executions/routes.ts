@@ -9,8 +9,12 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 
 import { writeAudit } from '../../lib/audit.js';
+import { OrgRateLimiter } from '../../lib/org-rate-limit.js';
 import { requireAuth, requireTenant } from '../../plugins/auth.js';
 import { getCurrentVersion, getInstalledWorkflow } from '../workflows/service.js';
+
+/** Per-organization cap on manual triggers: 60/min (plan-based caps post-MVP). */
+const EXECUTIONS_PER_ORG_PER_MINUTE = 60;
 
 const executionSummarySchema = z.object({
   id: z.string().uuid(),
@@ -46,6 +50,7 @@ export function executionRoutes({ db, logger, queue }: ExecutionsDeps) {
   return async function routes(instance: FastifyInstance): Promise<void> {
     const app = instance.withTypeProvider<ZodTypeProvider>();
     const auth = requireAuth(db);
+    const orgLimiter = new OrgRateLimiter(EXECUTIONS_PER_ORG_PER_MINUTE, 60_000);
 
     app.route({
       method: 'POST',
@@ -63,6 +68,7 @@ export function executionRoutes({ db, logger, queue }: ExecutionsDeps) {
       handler: async (request, reply) => {
         const tenant = request.tenant;
         if (!tenant) throw new AppError('FORBIDDEN', 'An active organization is required');
+        orgLimiter.check(tenant.organizationId);
         const installed = await getInstalledWorkflow(db, tenant, request.params.workflowId);
         if (installed.status !== 'active') {
           throw new AppError('CONFLICT', 'Workflow is not active');

@@ -4,10 +4,11 @@ Plataforma SaaS B2B de **workflows empresariales instalables, con IA integrada y
 Las empresas instalan procesos completos (gestión de facturas, onboarding, aprobación de gastos…),
 los conectan a sus herramientas y los ejecutan con pasos de IA y aprobaciones humanas.
 
-> **Estado: pre-MVP (Ciclos 1–2 completados).** Existe el monorepo, la documentación de
-> producto/arquitectura/seguridad, los tipos core del dominio y el CI. La API, el frontend,
-> la base de datos y el motor de ejecución se implementan en los Ciclos 3–8
-> (ver [docs/product/BACKLOG.md](docs/product/BACKLOG.md)).
+> **Estado: MVP completo (Ciclos 1–9).** Funciona end-to-end en local: registro,
+> organizaciones multi-tenant, catálogo, instalación y ejecución de workflows con nodos IA
+> (mock por defecto, OpenAI/Anthropic opcionales), aprobaciones humanas, historial y logs —
+> desde la UI web y por API. Los items Post-MVP están en
+> [docs/product/BACKLOG.md](docs/product/BACKLOG.md).
 
 ## Requisitos
 
@@ -36,15 +37,15 @@ Todas las variables están documentadas en [`.env.example`](.env.example). Regla
 
 ## Comandos principales
 
-| Comando                              | Descripción                                        |
-| ------------------------------------ | -------------------------------------------------- |
-| `pnpm dev`                           | Modo desarrollo (apps reales a partir del Ciclo 3) |
-| `pnpm build`                         | Compila todos los paquetes (Turborepo)             |
-| `pnpm lint` / `pnpm typecheck`       | Calidad de código                                  |
-| `pnpm test`                          | Tests (`node:test`)                                |
-| `pnpm format`                        | Prettier                                           |
-| `pnpm db:up` / `pnpm db:down`        | Infraestructura local en Docker                    |
-| `pnpm --filter @flowhub/<pkg> <cmd>` | Comando en un paquete concreto                     |
+| Comando                              | Descripción                                                |
+| ------------------------------------ | ---------------------------------------------------------- |
+| `pnpm dev`                           | Levanta web+api+worker (requiere `pnpm db:up` y REDIS_URL) |
+| `pnpm build`                         | Compila todos los paquetes (Turborepo)                     |
+| `pnpm lint` / `pnpm typecheck`       | Calidad de código                                          |
+| `pnpm test`                          | Tests (`node:test`)                                        |
+| `pnpm format`                        | Prettier                                                   |
+| `pnpm db:up` / `pnpm db:down`        | Infraestructura local en Docker                            |
+| `pnpm --filter @flowhub/<pkg> <cmd>` | Comando en un paquete concreto                             |
 
 ## Arquitectura (resumen)
 
@@ -77,13 +78,13 @@ Detalle: [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md).
 | Fase          | Contenido                                            |
 | ------------- | ---------------------------------------------------- |
 | ✅ Ciclos 1–2 | Monorepo, docs, ADRs, tipos core, CI                 |
-| ⬜ Ciclo 3    | Scaffold real de web (Next.js) y api (Fastify)       |
-| ⬜ Ciclo 4    | Base de datos: Drizzle, migraciones, seeds           |
-| ⬜ Ciclo 5    | API base: auth, organizations, workflows, executions |
-| ⬜ Ciclo 6    | Motor de workflows + worker + conectores mock        |
-| ⬜ Ciclo 7    | Frontend MVP (dashboard, catálogo, ejecuciones)      |
-| ⬜ Ciclo 8    | AI Gateway con providers reales opcionales           |
-| ⬜ Ciclo 9    | Hardening (tests, seguridad, CodeQL)                 |
+| ✅ Ciclo 3    | Scaffold real de web (Next.js) y api (Fastify)       |
+| ✅ Ciclo 4    | Base de datos: Drizzle, migraciones, seeds           |
+| ✅ Ciclo 5    | API base: auth, organizations, workflows, executions |
+| ✅ Ciclo 6    | Motor de workflows + worker + conectores mock        |
+| ✅ Ciclo 7    | Frontend MVP (dashboard, catálogo, ejecuciones)      |
+| ✅ Ciclo 8    | AI Gateway con providers reales opcionales           |
+| ✅ Ciclo 9    | Hardening (tests, seguridad, CodeQL)                 |
 
 Backlog detallado: [docs/product/BACKLOG.md](docs/product/BACKLOG.md).
 

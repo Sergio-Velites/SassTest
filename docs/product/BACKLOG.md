@@ -70,14 +70,27 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 - [x] Guardrails: cap mensual por organización (suma de ai_calls del mes vs AI_MONTHLY_COST_CAP_USD, bloquea antes de llamar al provider), truncado de variables (8k chars), timeout 30s por llamada.
 - [x] Nodo `ai` del engine sobre el puerto `EngineAiPort` (AiGateway en producción, `providerPort(mock)` en tests); errores tipados con retriabilidad correcta (5xx sí, budget/schema/plantilla no).
 
-## ⬜ Ciclo 9 — Hardening
+## ✅ Ciclo 9 — Hardening (COMPLETADO)
 
-- [ ] Tests de aislamiento multi-tenant sistemáticos (suite dedicada).
-- [ ] Rate limiting por IP y por organización; revisión de headers de seguridad.
-- [ ] CodeQL / code scanning activado; revisión de findings de gitleaks y pnpm audit.
-- [ ] Revisión de deuda técnica documentada (lista en este fichero).
-- [ ] Carga básica: 100 ejecuciones concurrentes en local sin corrupción de estado.
-- [ ] Revisión de docs completa: CLAUDE.md, ARCHITECTURE, WORKFLOW_ENGINE al día.
+- [x] Suite dedicada `tenant-isolation.test.ts`: dos organizaciones, sondeo sistemático de TODAS las superficies tenant-scoped con ids ajenos (siempre NOT_FOUND, nunca FORBIDDEN) + listados sin filas ajenas + verificación de que el propietario sí ve lo suyo.
+- [x] Rate limiting: por IP global (300/min) + /auth/* (10/min, con test de 429) + **por organización** en lanzamiento de ejecuciones (OrgRateLimiter sliding-window 60/min, con test; en memoria por instancia — versión Redis en deuda técnica). Headers helmet verificados por test.
+- [x] `pnpm audit --prod`: limpio (override de postcss <8.5.10, única moderate). gitleaks corre en CI. CodeQL: activación manual en settings del repo — checklist en infra/github/BRANCH_PROTECTION.md (no puede vivir en código).
+- [x] Deuda técnica documentada (sección al final de este fichero).
+- [x] Carga: 100 ejecuciones concurrentes (2 orgs × 50) por la API real → 100/100 succeeded, drenadas en ~5s, verificación de steps sin corrupción (4/4 succeeded, attempt=1).
+- [x] Docs sincronizadas: CLAUDE.md §2/§12, README roadmap, este backlog.
+
+## Deuda técnica (registrada en Ciclo 9)
+
+- Migrar el workspace a zod 4 + fastify-type-provider-zod 7 (hoy fijados a zod 3 / provider 4).
+- OrgRateLimiter en memoria → implementación Redis antes de escalar la API a varias instancias.
+- shadcn/ui + pulido visual del frontend (primitivas Tailwind propias en el MVP).
+- Selector rápido de organización en el header (la API ya soporta switch-organization).
+- Providers reales de IA sin verificar contra APIs vivas (no hay claves); probar al configurarlas.
+- Tests del frontend (hoy solo e2e manual con Playwright); considerar Playwright en CI.
+- Particionado por mes de workflow_execution_logs cuando crezca el volumen.
+- RLS de PostgreSQL como segunda capa de aislamiento (diseñado en ADR-0006).
+- commitlint en CI si aparecen commits fuera de convención.
+- Job de borrado real de usuarios soft-deleted (GDPR art. 17).
 
 ## Post-MVP (sin ciclo asignado)
 

@@ -20,7 +20,7 @@ Objetivo de negocio: suscripción SaaS (Free → Enterprise) + comisión de mark
 
 ## 2. Estado actual del proyecto
 
-**Fase actual: Ciclo 8 COMPLETADO; siguiente = Ciclo 9 (hardening, el último)** — monorepo, docs,
+**Fase actual: BACKLOG MVP COMPLETO (Ciclos 1–9).** El MVP funciona end-to-end en local: registro→organización→catálogo→instalación→ejecución con IA mock y aprobaciones→historial/logs, desde la UI y por API, con 100 ejecuciones concurrentes verificadas. Lo siguiente son items **Post-MVP** (requieren decisión del usuario: OAuth real, Stripe, marketplace público, despliegue GCP, editor visual) y la deuda técnica listada en el backlog. — monorepo, docs,
 tipos core, CI, las tres apps arrancan (`pnpm dev`) y la base de datos está implementada:
 27 tablas Drizzle migradas y sembradas (`pnpm db:reset`). **La API de dominio está completa (auth, organizations, catálogo, workflows, ejecuciones, approvals — todo encolando vía JobQueue); faltan el motor que consume los jobs, los conectores mock y la UI real** — especificados en docs, llegan en
 los ciclos siguientes (ver §12 y `docs/product/BACKLOG.md`).
@@ -197,7 +197,7 @@ Modelo completo: `docs/security/SECURITY_MODEL.md`.
 | 6     | Workflow engine + worker: executor, handlers, mocks, demo e2e                      | ✅ Hecho    |
 | 7     | Frontend MVP: login, dashboard, catálogo, ejecuciones, approvals, JSON             | ✅ Hecho    |
 | 8     | AI Gateway completo: templates BD, structured output, budget, providers reales     | ✅ Hecho    |
-| 9     | Hardening: tests, seguridad, rate limiting, CodeQL, revisión de deuda              | ⬜          |
+| 9     | Hardening: aislamiento, rate limiting, audit, carga, deuda técnica                 | ✅ Hecho    |
 
 **Decisiones pendientes** (resolver con el usuario cuando toque):
 

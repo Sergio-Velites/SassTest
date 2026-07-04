@@ -16,9 +16,9 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 
 - [ ] `apps/web`: Next.js App Router + TS + Tailwind + shadcn/ui (página placeholder + healthcheck de API).
 - [x] `apps/api`: Fastify + fastify-type-provider-zod + @fastify/swagger (OpenAPI en `/docs`), helmet headers, CORS desde env, rate limit básico, `/health`, error handler AppError→HTTP, tests con inject. (Nota: fastify-type-provider-zod fijado a ^4 mientras el workspace use zod 3; migrar a zod 4 + provider 7 como tarea de Ciclo 9.)
-- [ ] `apps/worker`: proceso arrancable con conexión Redis y graceful shutdown (sin jobs aún).
+- [x] `apps/worker`: proceso arrancable con conexión Redis (`queue.ready()` falla rápido con REDIS_URL inválida) y graceful shutdown. Sin handlers aún (llegan con el executor en Ciclo 6).
 - [ ] `packages/observability`: sustituir transporte console por pino manteniendo la interfaz `Logger`.
-- [ ] Definir interfaz `JobQueue` (enqueue/schedule/process) en shared o paquete propio + implementación BullMQ.
+- [x] Interfaz `JobQueue` en paquete propio `@flowhub/jobs` (enqueue/schedule/process/ready/close) + `BullMqJobQueue` (subconjunto portable de BullMQ) + `InMemoryJobQueue` para tests, con validación Zod de payloads y dedup por idempotencyKey. 6 tests.
 - [ ] `pnpm dev` levanta web+api+worker en paralelo (turbo).
 - [ ] Actualizar CI si hace falta (build de Next).
 

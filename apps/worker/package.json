@@ -8,10 +8,18 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src",
-    "test": "node --test dist/",
-    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+    "test": "node --test \"dist/**/*.test.js\"",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js"
   },
   "dependencies": {
+    "@flowhub/config": "workspace:*",
+    "@flowhub/jobs": "workspace:*",
+    "@flowhub/observability": "workspace:*",
     "@flowhub/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.0"
   }
 }

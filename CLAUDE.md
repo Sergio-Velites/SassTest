@@ -35,7 +35,9 @@ Lo que existe y funciona:
 - `packages/observability`: `Logger` estructurado + `redact()` de secretos. Con tests.
 - `packages/config`: `loadEnv()` validado con Zod.
 - `apps/api`: **scaffold Fastify real** — plugins helmet/CORS/rate-limit/swagger (OpenAPI en `/docs`), `/health`, error handler que mapea `AppError`→HTTP (tabla en `src/app.ts`), tests con `inject()`. Arranca con `pnpm --filter @flowhub/api dev` (tsx watch). Nota: `fastify-type-provider-zod` fijado a `^4` (v7 exige zod 4; el workspace usa zod 3).
-- `packages/database`, `packages/ui`, `apps/web`, `apps/worker`: **placeholders** compilables.
+- `packages/jobs`: abstracción `JobQueue` (ADR-0005) con `BullMqJobQueue` (Redis) e `InMemoryJobQueue` (tests). Payloads validados con Zod, dedup por idempotencyKey. Con tests.
+- `apps/worker`: **arrancable de verdad** — conecta a Redis vía `queue.ready()` (falla rápido sin REDIS_URL válida), logs estructurados y graceful shutdown verificado. Los handlers de jobs llegan con el executor (Ciclo 6).
+- `packages/database`, `packages/ui`, `apps/web`: **placeholders** compilables.
 - docker-compose con PostgreSQL 16 + Redis 7. CI en GitHub Actions (ci.yml + security.yml).
 
 ## 3. Arquitectura general

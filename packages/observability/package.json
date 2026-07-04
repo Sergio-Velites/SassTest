@@ -10,7 +10,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src",
-    "test": "node --test dist/",
+    "test": "node --test \"dist/**/*.test.js\"",
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   }
 }

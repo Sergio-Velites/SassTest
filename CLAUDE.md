@@ -34,7 +34,8 @@ Lo que existe y funciona:
 - `packages/connectors`: contrato `Connector` (mocks reales llegan en Ciclo 6).
 - `packages/observability`: `Logger` estructurado + `redact()` de secretos. Con tests.
 - `packages/config`: `loadEnv()` validado con Zod.
-- `packages/database`, `packages/ui`, `apps/web`, `apps/api`, `apps/worker`: **placeholders** compilables.
+- `apps/api`: **scaffold Fastify real** — plugins helmet/CORS/rate-limit/swagger (OpenAPI en `/docs`), `/health`, error handler que mapea `AppError`→HTTP (tabla en `src/app.ts`), tests con `inject()`. Arranca con `pnpm --filter @flowhub/api dev` (tsx watch). Nota: `fastify-type-provider-zod` fijado a `^4` (v7 exige zod 4; el workspace usa zod 3).
+- `packages/database`, `packages/ui`, `apps/web`, `apps/worker`: **placeholders** compilables.
 - docker-compose con PostgreSQL 16 + Redis 7. CI en GitHub Actions (ci.yml + security.yml).
 
 ## 3. Arquitectura general
@@ -182,16 +183,16 @@ Modelo completo: `docs/security/SECURITY_MODEL.md`.
 
 ## 12. Próximas fases (resumen — detalle en docs/product/BACKLOG.md)
 
-| Ciclo | Contenido                                                                          | Estado       |
-| ----- | ---------------------------------------------------------------------------------- | ------------ |
-| 1–2   | Estructura, documentación, ADRs, tipos core, CI                                    | ✅ Hecho     |
-| 3     | Scaffold real: Next.js en `apps/web`, Fastify en `apps/api`, pino en observability | ⬜ Siguiente |
-| 4     | `packages/database`: Drizzle, migraciones de las 23 tablas, seeds                  | ⬜           |
-| 5     | API base: auth simple, organizations, users, workflows, executions, logs           | ⬜           |
-| 6     | Workflow engine: executor, handlers de nodos, mocks de conectores, worker BullMQ   | ⬜           |
-| 7     | Frontend MVP: login, dashboard, catálogo, detalle de workflow/ejecución, logs      | ⬜           |
-| 8     | AI Gateway: providers reales opcionales (OpenAI/Anthropic), structured output      | ⬜           |
-| 9     | Hardening: tests, seguridad, rate limiting, CodeQL, revisión de deuda              | ⬜           |
+| Ciclo | Contenido                                                                             | Estado      |
+| ----- | ------------------------------------------------------------------------------------- | ----------- |
+| 1–2   | Estructura, documentación, ADRs, tipos core, CI                                       | ✅ Hecho    |
+| 3     | Scaffold real: Next.js en `apps/web`, Fastify en `apps/api` ✅, pino en observability | 🔶 En curso |
+| 4     | `packages/database`: Drizzle, migraciones de las 23 tablas, seeds                     | ⬜          |
+| 5     | API base: auth simple, organizations, users, workflows, executions, logs              | ⬜          |
+| 6     | Workflow engine: executor, handlers de nodos, mocks de conectores, worker BullMQ      | ⬜          |
+| 7     | Frontend MVP: login, dashboard, catálogo, detalle de workflow/ejecución, logs         | ⬜          |
+| 8     | AI Gateway: providers reales opcionales (OpenAI/Anthropic), structured output         | ⬜          |
+| 9     | Hardening: tests, seguridad, rate limiting, CodeQL, revisión de deuda                 | ⬜          |
 
 **Decisiones pendientes** (resolver con el usuario cuando toque):
 

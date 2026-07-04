@@ -15,7 +15,7 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 ## ⬜ Ciclo 3 — Scaffold técnico real
 
 - [ ] `apps/web`: Next.js App Router + TS + Tailwind + shadcn/ui (página placeholder + healthcheck de API).
-- [ ] `apps/api`: Fastify + fastify-type-provider-zod + @fastify/swagger (OpenAPI en `/docs`), helmet-equivalent headers, CORS desde env, rate limit básico, `/health`.
+- [x] `apps/api`: Fastify + fastify-type-provider-zod + @fastify/swagger (OpenAPI en `/docs`), helmet headers, CORS desde env, rate limit básico, `/health`, error handler AppError→HTTP, tests con inject. (Nota: fastify-type-provider-zod fijado a ^4 mientras el workspace use zod 3; migrar a zod 4 + provider 7 como tarea de Ciclo 9.)
 - [ ] `apps/worker`: proceso arrancable con conexión Redis y graceful shutdown (sin jobs aún).
 - [ ] `packages/observability`: sustituir transporte console por pino manteniendo la interfaz `Logger`.
 - [ ] Definir interfaz `JobQueue` (enqueue/schedule/process) en shared o paquete propio + implementación BullMQ.

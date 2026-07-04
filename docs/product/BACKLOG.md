@@ -34,9 +34,9 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 
 - [x] Auth: register/login/logout/me/switch-organization con argon2id, sesión server-side (tabla `sessions`, migración 0001, token opaco hasheado sha256, expiración deslizante 7d, revocación en logout) y cookie firmada httpOnly SameSite=Lax. Rate limit 10/min en `/auth/*`. Mismo error para email desconocido y password mal (sin account probing).
 - [x] Middleware de tenant: `requireAuth(db)` resuelve sesión y re-valida membresía en cada request; `requireTenant(minRole)` fail-closed con jerarquía viewer<member<admin<owner. Cross-tenant responde NOT_FOUND.
-- [ ] CRUD Organizations + members + invitaciones (mínimo).
-- [ ] Endpoints: catálogo de templates, instalar workflow, listar installed_workflows, lanzar ejecución manual, listar ejecuciones/steps/logs, approval requests (listar/aprobar/rechazar).
-- [ ] Audit log en acciones críticas.
+- [x] Organizations: crear (activa el tenant en sesión, membership owner, subscription free), current, members; invitaciones con token hasheado + accept (un solo uso, expiración 7d). Todo con audit log.
+- [~] Endpoints: catálogo (solo templates published, con versiones), instalar workflow (copia la definición, solo versiones publicadas), crear workflow desde JSON (validado por el engine con errores claros), listar/detalle de installed workflows. **Faltan: ejecuciones (lanzar/listar/steps/logs) y approvals** — dependen del enqueue vía JobQueue (siguiente bloque).
+- [x] Audit log en acciones críticas: organization.created, member.invited, member.joined, workflow.installed, workflow.created_from_json, session.organization_switched (+ usage_events en instalación).
 - [ ] OpenAPI completo y validación Zod input/output en todos los endpoints.
 - [~] Tests de API con inject + BD viva: lifecycle de sesión, CONFLICT, cookies forjadas, aislamiento en switch-organization (10 tests). Faltan los tests de los endpoints de dominio restantes.
 

@@ -17,7 +17,10 @@ import {
 } from 'fastify-type-provider-zod';
 
 import { authRoutes } from './modules/auth/routes.js';
+import { catalogRoutes } from './modules/catalog/routes.js';
 import { healthRoutes } from './modules/health/routes.js';
+import { organizationRoutes } from './modules/organizations/routes.js';
+import { workflowRoutes } from './modules/workflows/routes.js';
 
 /** Stable AppError code → HTTP status mapping (see docs/api/README.md). */
 const ERROR_STATUS: Record<AppErrorCode, number> = {
@@ -124,6 +127,9 @@ export async function buildApp({ env, logger, db }: AppDeps): Promise<FastifyIns
 
   await app.register(healthRoutes);
   await app.register(authRoutes({ db, logger, isProduction: env.NODE_ENV === 'production' }));
+  await app.register(organizationRoutes({ db, logger }));
+  await app.register(catalogRoutes({ db }));
+  await app.register(workflowRoutes({ db, logger }));
 
   return app;
 }

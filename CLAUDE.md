@@ -20,7 +20,7 @@ Objetivo de negocio: suscripción SaaS (Free → Enterprise) + comisión de mark
 
 ## 2. Estado actual del proyecto
 
-**Fase actual: Ciclo 6 COMPLETADO; siguiente = Ciclo 7 (frontend MVP)** — monorepo, docs,
+**Fase actual: Ciclo 7 COMPLETADO; siguiente = Ciclo 8 (AI Gateway completo)** — monorepo, docs,
 tipos core, CI, las tres apps arrancan (`pnpm dev`) y la base de datos está implementada:
 27 tablas Drizzle migradas y sembradas (`pnpm db:reset`). **La API de dominio está completa (auth, organizations, catálogo, workflows, ejecuciones, approvals — todo encolando vía JobQueue); faltan el motor que consume los jobs, los conectores mock y la UI real** — especificados en docs, llegan en
 los ciclos siguientes (ver §12 y `docs/product/BACKLOG.md`).
@@ -37,7 +37,7 @@ Lo que existe y funciona:
 - `apps/api`: Fastify real con helmet/CORS/rate-limit/swagger (`/docs`), `/health`, error handler `AppError`→HTTP, y **auth completa**: `/auth/register|login|logout|me|switch-organization` (argon2id, sesiones server-side en tabla `sessions`, cookie firmada httpOnly). Middleware `requireAuth(db)` + `requireTenant(minRole)` en `src/plugins/auth.ts` — TODO endpoint de dominio nuevo debe componer ambos. La API exige DATABASE_URL y AUTH_SESSION_SECRET al arrancar. Tests con inject + BD viva (skip sin DATABASE_URL). Nota: `fastify-type-provider-zod` fijado a `^4` (v7 exige zod 4).
 - `packages/jobs`: abstracción `JobQueue` (ADR-0005) con `BullMqJobQueue` (Redis) e `InMemoryJobQueue` (tests). Payloads validados con Zod, dedup por idempotencyKey. Con tests.
 - `apps/worker`: **worker completo** — `DrizzleExecutionStore` (implementación del puerto del engine, con re-scoping por organización en cada escritura), consume `execution.run`/`execution.resume-wait`/`approval.expire` de BullMQ con re-validación de tenant contra BD, MockAiProvider con respuestas canned de los prompts demo. Tests de integración contra Postgres vivo. **El Invoice Intake Demo corre end-to-end** (API→cola→worker→BD).
-- `apps/web`: **Next.js 15 real** (App Router, Tailwind 4, `output: 'standalone'`) con página de estado que hace healthcheck a la API. shadcn/ui se añade en Ciclo 7.
+- `apps/web`: **frontend MVP completo** — login/registro/onboarding, dashboard, catálogo con instalación, detalle de workflow (ejecutar + historial), detalle de ejecución (steps/logs con polling), bandeja de aprobaciones, creación desde JSON. Cliente API tipado (`src/lib/api.ts`, valida todo con Zod) + hooks TanStack Query (`src/lib/hooks.ts`). Primitivas UI Tailwind propias (shadcn/ui pospuesto al pulido visual). Verificado con e2e de navegador (Playwright). Nota: zod fijado a ^3 también aquí.
 - `packages/database`: **implementado** — 27 tablas Drizzle (schema en `src/schema/` por dominios), cliente `createDb`, migración 0000 (con citext), seeds idempotentes (`db:seed`), `pnpm db:reset`, tests contra BD viva que se saltan sin DATABASE_URL (CI levanta postgres:16 service).
 - `packages/ui`: **placeholder** compilable.
 - turbo.json declara `globalEnv` (turbo strict env mode): toda env var nueva debe añadirse ahí además de a `.env.example` y `packages/config`.
@@ -195,7 +195,7 @@ Modelo completo: `docs/security/SECURITY_MODEL.md`.
 | 4     | `packages/database`: Drizzle, migraciones de las 23+ tablas, seeds                 | ✅ Hecho    |
 | 5     | API base: auth ✅ + tenant middleware ✅; organizations, workflows, executions     | 🔶 En curso |
 | 6     | Workflow engine + worker: executor, handlers, mocks, demo e2e                      | ✅ Hecho    |
-| 7     | Frontend MVP: login, dashboard, catálogo, detalle de workflow/ejecución, logs      | ⬜          |
+| 7     | Frontend MVP: login, dashboard, catálogo, ejecuciones, approvals, JSON             | ✅ Hecho    |
 | 8     | AI Gateway: providers reales opcionales (OpenAI/Anthropic), structured output      | ⬜          |
 | 9     | Hardening: tests, seguridad, rate limiting, CodeQL, revisión de deuda              | ⬜          |
 

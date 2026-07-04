@@ -50,16 +50,16 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 - [x] Invoice Intake Demo verificado end-to-end en local: register → org → instalar desde catálogo (seed) → ejecutar → succeeded con 8 steps y logs visibles vía API (API → BullMQ → worker → engine → Postgres). Migración 0002 añade `branch` a workflow_execution_steps; el endpoint de steps lo expone.
 - [x] 8 tests del executor: Invoice Intake en sus 4 caminos (auto-registro, aprobación→register, rechazo, no-factura), reintentos agotados y con recuperación, wait con reloj falso, override de variables por instalación.
 
-## ⬜ Ciclo 7 — Frontend MVP
+## ✅ Ciclo 7 — Frontend MVP (COMPLETADO)
 
-- [ ] Login/registro y selector de organización.
-- [ ] Dashboard: ejecuciones recientes, tasa de éxito, approvals pendientes.
-- [ ] Catálogo de workflows + detalle + botón instalar.
-- [ ] Detalle de installed workflow: ejecutar manualmente, historial.
-- [ ] Detalle de ejecución: steps con estados, logs, datos de contexto.
-- [ ] Bandeja de aprobaciones: aprobar/rechazar con comentario.
-- [ ] Creación de workflow desde JSON con validación y errores claros.
-- [ ] TanStack Query + Zod en el cliente; estados de carga/error cuidados.
+- [x] Login/registro + onboarding de organización (el selector multi-org usa switch-organization de la API; UI de cambio rápido pendiente de pulido en C9).
+- [x] Dashboard: workflows instalados, tasa de éxito, approvals pendientes con enlace, tabla de ejecuciones recientes con polling.
+- [x] Catálogo con instalación en un clic (redirige al workflow instalado).
+- [x] Detalle de workflow: ejecutar ahora, historial de ejecuciones, definición JSON.
+- [x] Detalle de ejecución: steps con estado/intento/rama/output desplegable, logs con niveles coloreados, polling que se detiene en estados terminales.
+- [x] Bandeja de aprobaciones: payload visible, aprobar/rechazar con comentario opcional.
+- [x] Creación desde JSON con ejemplo precargado, error de sintaxis local y errores de validación del engine mostrados por campo.
+- [x] TanStack Query + cliente API tipado que valida cada respuesta con Zod; estados de carga/error en todas las páginas. Nota: primitivas UI Tailwind propias — shadcn/ui se pospone al pulido visual post-MVP (evita una tanda grande de deps radix sin cambiar la funcionalidad). Verificado con e2e de navegador real (Playwright): registro→org→instalar→ejecutar→succeeded→approvals.
 
 ## ⬜ Ciclo 8 — AI Gateway completo
 

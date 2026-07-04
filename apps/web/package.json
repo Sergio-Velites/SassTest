@@ -14,9 +14,11 @@
     "clean": "rm -rf .next .turbo dist *.tsbuildinfo"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.101.2",
     "next": "^15.5.20",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.2",

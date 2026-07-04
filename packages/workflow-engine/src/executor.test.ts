@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { MockAiProvider } from '@flowhub/ai-gateway';
+import { MockAiProvider, providerPort } from '@flowhub/ai-gateway';
 import { createMockConnectorRegistry, type Connector } from '@flowhub/connectors';
 import { createLogger } from '@flowhub/observability';
 
@@ -17,7 +17,7 @@ function makeDeps(
   return {
     store,
     connectors: options?.connectors ?? createMockConnectorRegistry(),
-    ai: options?.ai ?? new MockAiProvider(),
+    ai: providerPort(options?.ai ?? new MockAiProvider()),
     logger: silentLogger,
     sleep: async () => {}, // no real backoff waits in tests
   };

@@ -20,7 +20,7 @@ Objetivo de negocio: suscripción SaaS (Free → Enterprise) + comisión de mark
 
 ## 2. Estado actual del proyecto
 
-**Fase actual: Ciclo 7 COMPLETADO; siguiente = Ciclo 8 (AI Gateway completo)** — monorepo, docs,
+**Fase actual: Ciclo 8 COMPLETADO; siguiente = Ciclo 9 (hardening, el último)** — monorepo, docs,
 tipos core, CI, las tres apps arrancan (`pnpm dev`) y la base de datos está implementada:
 27 tablas Drizzle migradas y sembradas (`pnpm db:reset`). **La API de dominio está completa (auth, organizations, catálogo, workflows, ejecuciones, approvals — todo encolando vía JobQueue); faltan el motor que consume los jobs, los conectores mock y la UI real** — especificados en docs, llegan en
 los ciclos siguientes (ver §12 y `docs/product/BACKLOG.md`).
@@ -30,7 +30,7 @@ Lo que existe y funciona:
 - Monorepo pnpm workspaces + Turborepo. `pnpm build/lint/typecheck/test` en verde.
 - `packages/shared`: IDs branded, `Result`, `AppError`, `TenantContext` + `assertSameTenant`. Con tests.
 - `packages/workflow-engine`: schema Zod del JSON + **executor re-entrante completo** (`runExecution`): 7 handlers de nodo, interpolación, condiciones seguras, reintentos con backoff, pausas por wait/approval con reanudación por rama. Persistencia vía puerto `ExecutionStore` (implementación Drizzle en el worker; `InMemoryExecutionStore` para tests). Con 12 tests.
-- `packages/ai-gateway`: contrato `AiProvider` + `MockAiProvider` determinista. Con tests.
+- `packages/ai-gateway`: **gateway completo** — `AiGateway` (plantillas versionadas, renderizado con truncado, timeout, validación de structured output, budget mensual, trazas obligatorias), providers OpenAI/Anthropic sobre fetch (sin SDKs, activados por env; no verificados contra API real), `createProviderFromEnv`, `providerPort` para tests. El nodo `ai` del engine usa el puerto `EngineAiPort`. Implementaciones Drizzle de source/sink/budget en `apps/worker/src/ai.ts`. 8+ tests.
 - `packages/connectors`: contrato `Connector` + 6 mocks deterministas (gmail, slack, drive, accounting, http-generic eco, webhook-inbound) y `createMockConnectorRegistry()`.
 - `packages/observability`: `Logger` estructurado sobre **pino** + `redact()` de secretos, destination inyectable para tests. Con tests.
 - `packages/config`: `loadEnv()` validado con Zod.
@@ -196,7 +196,7 @@ Modelo completo: `docs/security/SECURITY_MODEL.md`.
 | 5     | API base: auth ✅ + tenant middleware ✅; organizations, workflows, executions     | 🔶 En curso |
 | 6     | Workflow engine + worker: executor, handlers, mocks, demo e2e                      | ✅ Hecho    |
 | 7     | Frontend MVP: login, dashboard, catálogo, ejecuciones, approvals, JSON             | ✅ Hecho    |
-| 8     | AI Gateway: providers reales opcionales (OpenAI/Anthropic), structured output      | ⬜          |
+| 8     | AI Gateway completo: templates BD, structured output, budget, providers reales     | ✅ Hecho    |
 | 9     | Hardening: tests, seguridad, rate limiting, CodeQL, revisión de deuda              | ⬜          |
 
 **Decisiones pendientes** (resolver con el usuario cuando toque):

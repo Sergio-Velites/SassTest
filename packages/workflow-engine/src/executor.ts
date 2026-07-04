@@ -1,6 +1,6 @@
-import type { AiProvider } from '@flowhub/ai-gateway';
 import type { Connector } from '@flowhub/connectors';
 import type { Logger } from '@flowhub/observability';
+import { isAppError } from '@flowhub/shared';
 
 import { evaluateCondition } from './condition.js';
 import {
@@ -15,10 +15,24 @@ import type { ExecutionStore, LoadedExecution, StepRecord } from './store.js';
 const DEFAULT_MAX_ATTEMPTS = 3;
 const BACKOFF_BASE_MS = 5000;
 
+/**
+ * AI port of the engine. Satisfied by AiGateway (production) and by
+ * providerPort(MockAiProvider) in tests — the engine never talks to an AI
+ * SDK or provider directly (ADR-0007).
+ */
+export interface EngineAiPort {
+  call(input: {
+    organizationId: string;
+    executionId?: string;
+    promptTemplateId: string;
+    variables: Record<string, string>;
+  }): Promise<{ output: unknown }>;
+}
+
 export interface ExecutorDeps {
   store: ExecutionStore;
   connectors: Map<string, Connector>;
-  ai: AiProvider;
+  ai: EngineAiPort;
   logger: Logger;
   /** Called when a wait node pauses the execution; wires to JobQueue.schedule. */
   scheduleResume?: (executionId: string, resumeAt: Date) => Promise<void>;
@@ -458,11 +472,10 @@ async function executeNode(
           string,
           unknown
         >;
-        // Cycle 8 replaces this with the full gateway (template rendering,
-        // structured output, cost persistence). The provider contract is final.
-        const renderedPrompt = `[${promptTemplateId}] input: ${JSON.stringify(input)}`;
-        const response = await deps.ai.call(
-          {
+        try {
+          const response = await deps.ai.call({
+            organizationId: loaded.organizationId,
+            executionId,
             promptTemplateId,
             variables: Object.fromEntries(
               Object.entries(input).map(([k, v]) => [
@@ -470,10 +483,21 @@ async function executeNode(
                 typeof v === 'string' ? v : JSON.stringify(v),
               ]),
             ),
-          },
-          renderedPrompt,
-        );
-        return { kind: 'succeeded', output: response.output };
+          });
+          return { kind: 'succeeded', output: response.output };
+        } catch (error) {
+          if (isAppError(error)) {
+            // Transient provider failures retry; budget caps, bad templates
+            // and schema mismatches do not.
+            const retryable = error.code === 'AI_PROVIDER_ERROR' && !/schema/.test(error.message);
+            return {
+              kind: 'failed',
+              error: { code: error.code, message: error.message },
+              retryable,
+            };
+          }
+          throw error;
+        }
       }
 
       default:

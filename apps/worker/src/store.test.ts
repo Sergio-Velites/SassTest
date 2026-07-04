@@ -6,7 +6,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { MockAiProvider } from '@flowhub/ai-gateway';
+import { MockAiProvider, providerPort } from '@flowhub/ai-gateway';
 import { createMockConnectorRegistry } from '@flowhub/connectors';
 import { createDb, schema, type DbHandle } from '@flowhub/database';
 import { createLogger } from '@flowhub/observability';
@@ -108,9 +108,11 @@ async function seedExecution(handle: DbHandle, totalAmount: number) {
   const deps: ExecutorDeps = {
     store: new DrizzleExecutionStore(db),
     connectors: createMockConnectorRegistry(),
-    ai: new MockAiProvider({
-      'invoice-extract@1': { vendor: 'ACME', totalAmount, date: '2026-06-28', vatAmount: 1 },
-    }),
+    ai: providerPort(
+      new MockAiProvider({
+        'invoice-extract@1': { vendor: 'ACME', totalAmount, date: '2026-06-28', vatAmount: 1 },
+      }),
+    ),
     logger: createLogger('error', { app: 'worker-test' }),
     sleep: async () => {},
   };

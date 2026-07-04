@@ -61,14 +61,14 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 - [x] Creación desde JSON con ejemplo precargado, error de sintaxis local y errores de validación del engine mostrados por campo.
 - [x] TanStack Query + cliente API tipado que valida cada respuesta con Zod; estados de carga/error en todas las páginas. Nota: primitivas UI Tailwind propias — shadcn/ui se pospone al pulido visual post-MVP (evita una tanda grande de deps radix sin cambiar la funcionalidad). Verificado con e2e de navegador real (Playwright): registro→org→instalar→ejecutar→succeeded→approvals.
 
-## ⬜ Ciclo 8 — AI Gateway completo
+## ✅ Ciclo 8 — AI Gateway completo (COMPLETADO)
 
-- [ ] Prompt templates versionados (tabla ai_prompt_templates) + renderizado con variables.
-- [ ] Structured output: JSON schema/Zod → validación de respuesta del provider.
-- [ ] Providers reales opcionales: OpenAI y Anthropic activados por env vars (mock sigue siendo default).
-- [ ] Persistencia de ai_calls (modelo, tokens, coste estimado, latencia, resultado).
-- [ ] Guardrails: cap de coste mensual por organización (`AI_MONTHLY_COST_CAP_USD`), truncado de inputs, timeout.
-- [ ] Nodo `ai` del engine usando el gateway completo.
+- [x] Prompt templates versionados: `PromptTemplateSource` con implementación Drizzle (los de organización pisan a los de sistema), id lógico `slug@version`, renderizado `{{var}}`.
+- [x] Structured output: validación contra el output_schema del template (validador JSON-schema mínimo, ampliable a ajv); mismatch → traza `schema_mismatch` + error tipado no reintentable.
+- [x] Providers reales: OpenAI y Anthropic sobre fetch (sin SDKs) con estimación de coste, seleccionados con `createProviderFromEnv` (AI_PROVIDER; fail-fast sin API key; mock default). Sin verificar contra APIs reales por no haber claves — cubierto por contrato.
+- [x] Persistencia de ai_calls vía `AiCallSink` Drizzle (provider, modelo, tokens, coste, latencia, estado, error seguro) — verificado en vivo: 2 trazas por ejecución del demo.
+- [x] Guardrails: cap mensual por organización (suma de ai_calls del mes vs AI_MONTHLY_COST_CAP_USD, bloquea antes de llamar al provider), truncado de variables (8k chars), timeout 30s por llamada.
+- [x] Nodo `ai` del engine sobre el puerto `EngineAiPort` (AiGateway en producción, `providerPort(mock)` en tests); errores tipados con retriabilidad correcta (5xx sí, budget/schema/plantilla no).
 
 ## ⬜ Ciclo 9 — Hardening
 

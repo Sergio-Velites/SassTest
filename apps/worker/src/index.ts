@@ -1,4 +1,4 @@
-import { MockAiProvider } from '@flowhub/ai-gateway';
+import { AiGateway, createProviderFromEnv } from '@flowhub/ai-gateway';
 import { loadEnv } from '@flowhub/config';
 import { createMockConnectorRegistry } from '@flowhub/connectors';
 import { createDb, schema } from '@flowhub/database';
@@ -7,6 +7,7 @@ import { createLogger } from '@flowhub/observability';
 import { runExecution, type ExecutorDeps } from '@flowhub/workflow-engine';
 import { and, eq } from 'drizzle-orm';
 
+import { DrizzleAiBudget, DrizzleAiCallSink, DrizzlePromptSource } from './ai.js';
 import { DrizzleExecutionStore } from './store.js';
 
 const env = loadEnv();
@@ -22,17 +23,25 @@ const queue = new BullMqJobQueue(env.REDIS_URL);
 const store = new DrizzleExecutionStore(dbHandle.db);
 
 /**
- * Canned outputs for the demo prompts while AI_PROVIDER=mock.
- * Cycle 8 replaces this with the full AI Gateway (real providers optional).
+ * Full AI Gateway (ADR-0007): versioned templates from the database,
+ * structured-output validation, monthly budget cap, per-call traces in
+ * ai_calls. Provider selected via AI_PROVIDER (mock default — the canned
+ * outputs below keep the demo deterministic without API keys).
  */
-const ai = new MockAiProvider({
-  'invoice-classify@1': { isInvoice: true, confidence: 0.97 },
-  'invoice-extract@1': {
-    vendor: 'ACME Supplies S.L.',
-    totalAmount: 342.5,
-    date: '2026-06-28',
-    vatAmount: 59.44,
-  },
+const ai = new AiGateway({
+  provider: createProviderFromEnv(env, {
+    'invoice-classify@1': { isInvoice: true, confidence: 0.97 },
+    'invoice-extract@1': {
+      vendor: 'ACME Supplies S.L.',
+      totalAmount: 342.5,
+      date: '2026-06-28',
+      vatAmount: 59.44,
+    },
+  }),
+  templates: new DrizzlePromptSource(dbHandle.db),
+  sink: new DrizzleAiCallSink(dbHandle.db),
+  budget: new DrizzleAiBudget(dbHandle.db),
+  monthlyCostCapUsd: env.AI_MONTHLY_COST_CAP_USD,
 });
 
 const executorDeps: ExecutorDeps = {

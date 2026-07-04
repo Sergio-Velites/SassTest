@@ -134,3 +134,27 @@ export const invitations = pgTable(
     check('invitations_role_check', sql`${t.role} IN ('owner', 'admin', 'member', 'viewer')`),
   ],
 );
+
+/**
+ * Server-side sessions (SECURITY_MODEL.md §2). The cookie carries an opaque
+ * high-entropy token; only its sha256 hash is stored. Revocation = revoked_at.
+ */
+export const sessions = pgTable(
+  'sessions',
+  {
+    id: id(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    tokenHash: text('token_hash').notNull(),
+    /** Tenant the session currently operates in; validated against membership. */
+    activeOrganizationId: uuid('active_organization_id').references(() => organizations.id),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('sessions_token_hash_unique').on(t.tokenHash),
+    index('sessions_user_idx').on(t.userId),
+  ],
+);

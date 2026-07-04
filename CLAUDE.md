@@ -20,10 +20,9 @@ Objetivo de negocio: suscripción SaaS (Free → Enterprise) + comisión de mark
 
 ## 2. Estado actual del proyecto
 
-**Fase actual: Ciclo 4 COMPLETADO; siguiente = Ciclo 5 (API base)** — monorepo, docs,
+**Fase actual: Ciclo 5 EN CURSO (auth + tenant middleware hechos)** — monorepo, docs,
 tipos core, CI, las tres apps arrancan (`pnpm dev`) y la base de datos está implementada:
-27 tablas Drizzle migradas y sembradas (`pnpm db:reset`). **Aún no hay dominios de API
-(auth/orgs/workflows), UI real ni motor de ejecución** — especificados en docs, llegan en
+27 tablas Drizzle migradas y sembradas (`pnpm db:reset`). **Hay auth completa (sesiones server-side + cookie firmada) y middleware de tenant; faltan los endpoints de organizations/workflows/executions, la UI real y el motor** — especificados en docs, llegan en
 los ciclos siguientes (ver §12 y `docs/product/BACKLOG.md`).
 
 Lo que existe y funciona:
@@ -35,7 +34,7 @@ Lo que existe y funciona:
 - `packages/connectors`: contrato `Connector` (mocks reales llegan en Ciclo 6).
 - `packages/observability`: `Logger` estructurado sobre **pino** + `redact()` de secretos, destination inyectable para tests. Con tests.
 - `packages/config`: `loadEnv()` validado con Zod.
-- `apps/api`: **scaffold Fastify real** — plugins helmet/CORS/rate-limit/swagger (OpenAPI en `/docs`), `/health`, error handler que mapea `AppError`→HTTP (tabla en `src/app.ts`), tests con `inject()`. Arranca con `pnpm --filter @flowhub/api dev` (tsx watch). Nota: `fastify-type-provider-zod` fijado a `^4` (v7 exige zod 4; el workspace usa zod 3).
+- `apps/api`: Fastify real con helmet/CORS/rate-limit/swagger (`/docs`), `/health`, error handler `AppError`→HTTP, y **auth completa**: `/auth/register|login|logout|me|switch-organization` (argon2id, sesiones server-side en tabla `sessions`, cookie firmada httpOnly). Middleware `requireAuth(db)` + `requireTenant(minRole)` en `src/plugins/auth.ts` — TODO endpoint de dominio nuevo debe componer ambos. La API exige DATABASE_URL y AUTH_SESSION_SECRET al arrancar. Tests con inject + BD viva (skip sin DATABASE_URL). Nota: `fastify-type-provider-zod` fijado a `^4` (v7 exige zod 4).
 - `packages/jobs`: abstracción `JobQueue` (ADR-0005) con `BullMqJobQueue` (Redis) e `InMemoryJobQueue` (tests). Payloads validados con Zod, dedup por idempotencyKey. Con tests.
 - `apps/worker`: **arrancable de verdad** — conecta a Redis vía `queue.ready()` (falla rápido sin REDIS_URL válida), logs estructurados y graceful shutdown verificado. Los handlers de jobs llegan con el executor (Ciclo 6).
 - `apps/web`: **Next.js 15 real** (App Router, Tailwind 4, `output: 'standalone'`) con página de estado que hace healthcheck a la API. shadcn/ui se añade en Ciclo 7.
@@ -189,16 +188,16 @@ Modelo completo: `docs/security/SECURITY_MODEL.md`.
 
 ## 12. Próximas fases (resumen — detalle en docs/product/BACKLOG.md)
 
-| Ciclo | Contenido                                                                          | Estado   |
-| ----- | ---------------------------------------------------------------------------------- | -------- |
-| 1–2   | Estructura, documentación, ADRs, tipos core, CI                                    | ✅ Hecho |
-| 3     | Scaffold real: Next.js en `apps/web`, Fastify en `apps/api`, pino en observability | ✅ Hecho |
-| 4     | `packages/database`: Drizzle, migraciones de las 23+ tablas, seeds                 | ✅ Hecho |
-| 5     | API base: auth simple, organizations, users, workflows, executions, logs           | ⬜       |
-| 6     | Workflow engine: executor, handlers de nodos, mocks de conectores, worker BullMQ   | ⬜       |
-| 7     | Frontend MVP: login, dashboard, catálogo, detalle de workflow/ejecución, logs      | ⬜       |
-| 8     | AI Gateway: providers reales opcionales (OpenAI/Anthropic), structured output      | ⬜       |
-| 9     | Hardening: tests, seguridad, rate limiting, CodeQL, revisión de deuda              | ⬜       |
+| Ciclo | Contenido                                                                          | Estado      |
+| ----- | ---------------------------------------------------------------------------------- | ----------- |
+| 1–2   | Estructura, documentación, ADRs, tipos core, CI                                    | ✅ Hecho    |
+| 3     | Scaffold real: Next.js en `apps/web`, Fastify en `apps/api`, pino en observability | ✅ Hecho    |
+| 4     | `packages/database`: Drizzle, migraciones de las 23+ tablas, seeds                 | ✅ Hecho    |
+| 5     | API base: auth ✅ + tenant middleware ✅; organizations, workflows, executions     | 🔶 En curso |
+| 6     | Workflow engine: executor, handlers de nodos, mocks de conectores, worker BullMQ   | ⬜          |
+| 7     | Frontend MVP: login, dashboard, catálogo, detalle de workflow/ejecución, logs      | ⬜          |
+| 8     | AI Gateway: providers reales opcionales (OpenAI/Anthropic), structured output      | ⬜          |
+| 9     | Hardening: tests, seguridad, rate limiting, CodeQL, revisión de deuda              | ⬜          |
 
 **Decisiones pendientes** (resolver con el usuario cuando toque):
 

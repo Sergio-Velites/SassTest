@@ -1,9 +1,11 @@
+import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import type { Env } from '@flowhub/config';
+import type { Db } from '@flowhub/database';
 import type { Logger } from '@flowhub/observability';
 import { type AppErrorCode, isAppError } from '@flowhub/shared';
 import fastify, { type FastifyError, type FastifyInstance } from 'fastify';
@@ -14,6 +16,7 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 
+import { authRoutes } from './modules/auth/routes.js';
 import { healthRoutes } from './modules/health/routes.js';
 
 /** Stable AppError code → HTTP status mapping (see docs/api/README.md). */
@@ -34,6 +37,7 @@ const ERROR_STATUS: Record<AppErrorCode, number> = {
 export interface AppDeps {
   env: Env;
   logger: Logger;
+  db: Db;
 }
 
 /**
@@ -41,7 +45,10 @@ export interface AppDeps {
  * Route modules plug in under src/modules/<domain>/ (Cycle 5).
  * Kept side-effect free (no listen) so tests can use inject().
  */
-export async function buildApp({ env, logger }: AppDeps): Promise<FastifyInstance> {
+export async function buildApp({ env, logger, db }: AppDeps): Promise<FastifyInstance> {
+  if (!env.AUTH_SESSION_SECRET) {
+    throw new Error('AUTH_SESSION_SECRET is required to build the API (see .env.example)');
+  }
   const app = fastify({
     // We use @flowhub/observability for logs; fastify's pino stays off.
     logger: false,
@@ -66,6 +73,8 @@ export async function buildApp({ env, logger }: AppDeps): Promise<FastifyInstanc
     max: 300, // generous global per-IP baseline; per-route/tenant limits arrive in Cycle 9
     timeWindow: '1 minute',
   });
+
+  await app.register(cookie, { secret: env.AUTH_SESSION_SECRET });
 
   await app.register(swagger, {
     openapi: {
@@ -114,6 +123,7 @@ export async function buildApp({ env, logger }: AppDeps): Promise<FastifyInstanc
   );
 
   await app.register(healthRoutes);
+  await app.register(authRoutes({ db, logger, isProduction: env.NODE_ENV === 'production' }));
 
   return app;
 }

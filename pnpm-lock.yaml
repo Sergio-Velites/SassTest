@@ -115,9 +115,18 @@ importers:
 
   apps/worker:
     dependencies:
+      '@flowhub/ai-gateway':
+        specifier: workspace:*
+        version: link:../../packages/ai-gateway
       '@flowhub/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@flowhub/connectors':
+        specifier: workspace:*
+        version: link:../../packages/connectors
+      '@flowhub/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@flowhub/jobs':
         specifier: workspace:*
         version: link:../../packages/jobs
@@ -127,6 +136,12 @@ importers:
       '@flowhub/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@flowhub/workflow-engine':
+        specifier: workspace:*
+        version: link:../../packages/workflow-engine
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(@types/pg@8.20.0)(pg@8.22.0)
     devDependencies:
       tsx:
         specifier: ^4.23.0

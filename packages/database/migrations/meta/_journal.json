@@ -15,6 +15,13 @@
       "when": 1783167561296,
       "tag": "0001_many_stature",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783169393201,
+      "tag": "0002_old_norman_osborn",
+      "breakpoints": true
     }
   ]
 }

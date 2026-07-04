@@ -77,6 +77,8 @@ export const workflowExecutionSteps = pgTable(
     /** Sanitized — the engine strips secrets before persisting. */
     input: jsonb('input'),
     output: jsonb('output'),
+    /** Branch taken by condition/approval nodes — required to resume traversal. */
+    branch: text('branch'),
     error: jsonb('error'),
     startedAt: timestamp('started_at', { withTimezone: true }),
     finishedAt: timestamp('finished_at', { withTimezone: true }),

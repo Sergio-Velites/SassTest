@@ -40,14 +40,14 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 - [x] OpenAPI completo en `/docs` y validación Zod de input/output en todos los endpoints (fastify-type-provider-zod).
 - [x] 19 tests de API con inject + BD viva: auth lifecycle, invitaciones, instalación, validación JSON, RBAC, aislamiento cross-tenant (workflows y ejecuciones), enqueue idempotente y resolución de approvals con re-encolado.
 
-## ⬜ Ciclo 6 — Workflow engine + worker
+## ✅ Ciclo 6 — Workflow engine + worker (COMPLETADO)
 
 - [x] Executor re-entrante en `packages/workflow-engine` (`runExecution`): recorre el grafo, branches, snapshots de contexto, puerto `ExecutionStore` (el engine no toca BD; el worker aporta la implementación Drizzle), `InMemoryExecutionStore` para tests.
 - [x] Handlers de los 7 kinds: trigger, transform (assign interpolado), condition (evaluador seguro sin eval), wait (pausa + resume por timestamp), approval (crea request, pausa, reanuda por rama approved/rejected/expired), action (registro de conectores), ai (provider mock; gateway completo en C8). Interpolación `{{nodes.*}}/{{variables.*}}/{{trigger.*}}` con lookup puro.
 - [x] Conectores mock: gmail-mock, slack-mock, drive-mock, accounting-mock, http-generic (eco, sin red real hasta tener allowlist anti-SSRF), webhook-inbound + `createMockConnectorRegistry()`.
 - [x] Reintentos con backoff exponencial 5s/25s/125s (máx 3, configurable por nodo, sleep inyectable), pasos succeeded nunca se re-ejecutan (idempotencia por (execution, node) + snapshots).
-- [ ] Worker BullMQ consumiendo jobs de ejecución; API encola vía `JobQueue`.
-- [ ] Workflow demo Invoice Intake completo end-to-end en local (seed).
+- [x] Worker BullMQ: `DrizzleExecutionStore` (re-scoping por organización en cada escritura), handlers `execution.run`/`execution.resume-wait`/`approval.expire`, re-validación de tenant contra BD antes de ejecutar (nunca se confía en el payload del job), `scheduleResume` → `queue.schedule`.
+- [x] Invoice Intake Demo verificado end-to-end en local: register → org → instalar desde catálogo (seed) → ejecutar → succeeded con 8 steps y logs visibles vía API (API → BullMQ → worker → engine → Postgres). Migración 0002 añade `branch` a workflow_execution_steps; el endpoint de steps lo expone.
 - [x] 8 tests del executor: Invoice Intake en sus 4 caminos (auto-registro, aprobación→register, rechazo, no-factura), reintentos agotados y con recuperación, wait con reloj falso, override de variables por instalación.
 
 ## ⬜ Ciclo 7 — Frontend MVP

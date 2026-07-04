@@ -10,10 +10,21 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src",
-    "test": "node --test dist/",
-    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+    "test": "node --test \"dist/**/*.test.js\"",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx src/seed.ts"
   },
   "dependencies": {
-    "@flowhub/shared": "workspace:*"
+    "@flowhub/shared": "workspace:*",
+    "@flowhub/workflow-engine": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.23.0"
   }
 }

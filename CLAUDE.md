@@ -20,11 +20,11 @@ Objetivo de negocio: suscripción SaaS (Free → Enterprise) + comisión de mark
 
 ## 2. Estado actual del proyecto
 
-**Fase actual: Ciclo 3 COMPLETADO; siguiente = Ciclo 4 (base de datos)** — monorepo,
-documentación, tipos core, CI, y las tres apps arrancan de verdad (`pnpm dev` levanta
-web+api+worker; requiere `pnpm db:up` y REDIS_URL en el entorno). **Aún no hay base de
-datos, dominios de API, UI real ni motor de ejecución** — especificados en docs, llegan
-en los ciclos siguientes (ver §12 y `docs/product/BACKLOG.md`).
+**Fase actual: Ciclo 4 COMPLETADO; siguiente = Ciclo 5 (API base)** — monorepo, docs,
+tipos core, CI, las tres apps arrancan (`pnpm dev`) y la base de datos está implementada:
+27 tablas Drizzle migradas y sembradas (`pnpm db:reset`). **Aún no hay dominios de API
+(auth/orgs/workflows), UI real ni motor de ejecución** — especificados en docs, llegan en
+los ciclos siguientes (ver §12 y `docs/product/BACKLOG.md`).
 
 Lo que existe y funciona:
 
@@ -39,7 +39,8 @@ Lo que existe y funciona:
 - `packages/jobs`: abstracción `JobQueue` (ADR-0005) con `BullMqJobQueue` (Redis) e `InMemoryJobQueue` (tests). Payloads validados con Zod, dedup por idempotencyKey. Con tests.
 - `apps/worker`: **arrancable de verdad** — conecta a Redis vía `queue.ready()` (falla rápido sin REDIS_URL válida), logs estructurados y graceful shutdown verificado. Los handlers de jobs llegan con el executor (Ciclo 6).
 - `apps/web`: **Next.js 15 real** (App Router, Tailwind 4, `output: 'standalone'`) con página de estado que hace healthcheck a la API. shadcn/ui se añade en Ciclo 7.
-- `packages/database`, `packages/ui`: **placeholders** compilables.
+- `packages/database`: **implementado** — 27 tablas Drizzle (schema en `src/schema/` por dominios), cliente `createDb`, migración 0000 (con citext), seeds idempotentes (`db:seed`), `pnpm db:reset`, tests contra BD viva que se saltan sin DATABASE_URL (CI levanta postgres:16 service).
+- `packages/ui`: **placeholder** compilable.
 - turbo.json declara `globalEnv` (turbo strict env mode): toda env var nueva debe añadirse ahí además de a `.env.example` y `packages/config`.
 - docker-compose con PostgreSQL 16 + Redis 7. CI en GitHub Actions (ci.yml + security.yml).
 
@@ -192,7 +193,7 @@ Modelo completo: `docs/security/SECURITY_MODEL.md`.
 | ----- | ---------------------------------------------------------------------------------- | -------- |
 | 1–2   | Estructura, documentación, ADRs, tipos core, CI                                    | ✅ Hecho |
 | 3     | Scaffold real: Next.js en `apps/web`, Fastify en `apps/api`, pino en observability | ✅ Hecho |
-| 4     | `packages/database`: Drizzle, migraciones de las 23 tablas, seeds                  | ⬜       |
+| 4     | `packages/database`: Drizzle, migraciones de las 23+ tablas, seeds                 | ✅ Hecho |
 | 5     | API base: auth simple, organizations, users, workflows, executions, logs           | ⬜       |
 | 6     | Workflow engine: executor, handlers de nodos, mocks de conectores, worker BullMQ   | ⬜       |
 | 7     | Frontend MVP: login, dashboard, catálogo, detalle de workflow/ejecución, logs      | ⬜       |

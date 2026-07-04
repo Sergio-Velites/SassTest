@@ -1,13 +1,14 @@
 /**
  * @flowhub/database — Drizzle ORM schema, client and migrations.
  *
- * Implemented in Cycle 4. The full data model (23 tables) is specified in
- * docs/architecture/DATA_MODEL.md — implement from that spec.
- * Until then this package only exports the tenancy convention constant.
+ * The data model is specified in docs/architecture/DATA_MODEL.md — keep both
+ * in sync. Migrations live in ./migrations and are immutable once committed.
+ *
+ * Tenancy convention: every tenant-owned table has an `organization_id`
+ * column and every query MUST filter by it (SECURITY_MODEL.md §4).
  */
 
-/**
- * Convention: every tenant-owned table has an `organization_id` column and
- * every query MUST filter by it. See docs/security/SECURITY_MODEL.md.
- */
 export const TENANT_COLUMN = 'organization_id' as const;
+
+export * from './client.js';
+export * as schema from './schema/index.js';

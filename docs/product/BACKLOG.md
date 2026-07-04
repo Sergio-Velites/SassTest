@@ -22,13 +22,13 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 - [x] `pnpm dev` levanta web+api+worker en paralelo (turbo). Requiere `pnpm db:up` y REDIS_URL (el worker hace fail-fast sin Redis, por diseño). `globalEnv` declarado en turbo.json (turbo strict env mode).
 - [x] CI revisado: `pnpm build` cubre `next build` sin cambios adicionales.
 
-## ⬜ Ciclo 4 — Base de datos
+## ✅ Ciclo 4 — Base de datos (COMPLETADO)
 
-- [ ] `packages/database`: Drizzle ORM + drizzle-kit, cliente pg, migraciones versionadas.
-- [ ] Implementar las 23 tablas de `docs/architecture/DATA_MODEL.md` (users, organizations, organization_members, roles, permissions, workflow_templates, workflow_template_versions, installed_workflows, workflow_versions, workflow_nodes, workflow_edges, workflow_executions, workflow_execution_steps, workflow_execution_logs, connector_accounts, connector_secrets_metadata, ai_prompt_templates, ai_calls, audit_logs, marketplace_listings, usage_events, approval_requests, invitations).
-- [ ] Seeds: organización demo, usuario demo, plantilla Invoice Intake Demo.
-- [ ] Script `scripts/db-reset` (drop + migrate + seed) para desarrollo.
-- [ ] Tests de repositorio básicos contra Postgres de docker-compose.
+- [x] `packages/database`: Drizzle ORM + drizzle-kit, cliente pg (`createDb` con pool inyectable), migración inicial 0000 versionada (incluye extensión citext).
+- [x] 27 tablas implementadas según `docs/architecture/DATA_MODEL.md` (las 23 core + role_permissions, plans, subscriptions, invoices, marketplace_payouts) con CHECKs, índices compuestos por organization_id, índice parcial único de versión current y citext para emails/slugs.
+- [x] Seeds idempotentes: planes, catálogo de permisos, org+usuario demo, plantilla Invoice Intake Demo publicada (definición validada con workflowDefinitionSchema) y prompts IA de sistema. Guard anti-producción.
+- [x] `pnpm db:reset` (scripts/db-reset.sh): drop + migrate + seed, verificado end-to-end.
+- [x] Tests contra Postgres vivo (aislamiento de tenant, índice parcial único, CHECK constraints) que se saltan sin DATABASE_URL; CI levanta postgres:16 como service y aplica migraciones antes de testear.
 
 ## ⬜ Ciclo 5 — API base
 

@@ -19,6 +19,22 @@ jobs:
     name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: flowhub
+          POSTGRES_PASSWORD: flowhub_ci_password
+          POSTGRES_DB: flowhub
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U flowhub -d flowhub"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://flowhub:flowhub_ci_password@localhost:5432/flowhub
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +56,9 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      - name: Apply database migrations
+        run: pnpm --filter @flowhub/database db:migrate
 
       - name: Test
         run: pnpm test

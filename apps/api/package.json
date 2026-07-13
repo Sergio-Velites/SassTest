@@ -14,12 +14,12 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@fastify/cookie": "^11.0.2",
-    "@fastify/cors": "^11.2.0",
-    "@fastify/helmet": "^13.0.2",
+    "@fastify/cookie": "^11.1.1",
+    "@fastify/cors": "^11.3.0",
+    "@fastify/helmet": "^13.1.0",
     "@fastify/rate-limit": "^11.1.0",
-    "@fastify/swagger": "^9.7.0",
-    "@fastify/swagger-ui": "^6.0.0",
+    "@fastify/swagger": "^9.8.0",
+    "@fastify/swagger-ui": "^6.1.0",
     "@flowhub/config": "workspace:*",
     "@flowhub/database": "workspace:*",
     "@flowhub/jobs": "workspace:*",
@@ -28,11 +28,11 @@
     "@flowhub/workflow-engine": "workspace:*",
     "argon2": "^0.44.0",
     "drizzle-orm": "^0.45.2",
-    "fastify": "^5.9.0",
+    "fastify": "^5.10.0",
     "fastify-type-provider-zod": "^4.0.2",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "tsx": "^4.23.0"
+    "tsx": "^4.23.1"
   }
 }

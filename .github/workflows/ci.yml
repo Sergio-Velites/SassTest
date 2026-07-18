@@ -36,7 +36,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://flowhub:flowhub_ci_password@localhost:5432/flowhub
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v4
 
@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build api image
         run: docker build -f apps/api/Dockerfile -t flowhub-api:ci .
       - name: Build worker image

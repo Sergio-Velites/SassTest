@@ -1,0 +1,3 @@
+# Copy to terraform.tfvars and fill in. NEVER commit terraform.tfvars.
+project_id           = "flowhub-production"
+# cors_allowed_origins = "https://app.your-domain.com"

@@ -1,0 +1,102 @@
+name: Deploy
+
+# Staging on every merge to main; production when a release is published.
+# Authentication: Workload Identity Federation — no JSON keys (ADR-0008).
+#
+# Required per-environment GitHub variables (Settings > Environments):
+#   GCP_PROJECT_ID     e.g. flowhub-staging
+#   GCP_REGION         e.g. europe-west1
+#   GCP_WIF_PROVIDER   terraform output: workload_identity_provider
+#   GCP_DEPLOY_SA      terraform output: deploy_service_account
+#   NEXT_PUBLIC_API_URL  public API URL (set after the first deploy)
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-${{ github.event_name == 'release' && 'production' || 'staging' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy ${{ github.event_name == 'release' && 'production' || 'staging' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ github.event_name == 'release' && 'production' || 'staging' }}
+    env:
+      PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      REGION: ${{ vars.GCP_REGION }}
+      REPO: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/flowhub
+      TAG: ${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker auth for Artifact Registry
+        run: gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+
+      - name: Build and push api image
+        run: |
+          docker build -f apps/api/Dockerfile -t "$REPO/api:$TAG" .
+          docker push "$REPO/api:$TAG"
+
+      - name: Build and push worker image
+        run: |
+          docker build -f apps/worker/Dockerfile -t "$REPO/worker:$TAG" .
+          docker push "$REPO/worker:$TAG"
+
+      - name: Build and push web image
+        run: |
+          docker build -f apps/web/Dockerfile \
+            --build-arg NEXT_PUBLIC_API_URL="${{ vars.NEXT_PUBLIC_API_URL }}" \
+            -t "$REPO/web:$TAG" .
+          docker push "$REPO/web:$TAG"
+
+      - name: Run database migrations (Cloud Run job)
+        run: |
+          gcloud run jobs update flowhub-migrate \
+            --project "$PROJECT_ID" --region "$REGION" \
+            --image "$REPO/api:$TAG"
+          gcloud run jobs execute flowhub-migrate \
+            --project "$PROJECT_ID" --region "$REGION" --wait
+
+      - name: Deploy api
+        run: |
+          gcloud run services update flowhub-api \
+            --project "$PROJECT_ID" --region "$REGION" \
+            --image "$REPO/api:$TAG"
+
+      - name: Deploy worker
+        run: |
+          gcloud run services update flowhub-worker \
+            --project "$PROJECT_ID" --region "$REGION" \
+            --image "$REPO/worker:$TAG"
+
+      - name: Deploy web
+        run: |
+          gcloud run services update flowhub-web \
+            --project "$PROJECT_ID" --region "$REGION" \
+            --image "$REPO/web:$TAG"
+
+      - name: Smoke test
+        run: |
+          API_URL=$(gcloud run services describe flowhub-api \
+            --project "$PROJECT_ID" --region "$REGION" --format 'value(status.url)')
+          curl --fail --silent --show-error --max-time 20 "$API_URL/health"
+          echo "API healthy at $API_URL"

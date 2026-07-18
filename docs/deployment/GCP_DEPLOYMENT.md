@@ -1,7 +1,10 @@
 # Despliegue en Google Cloud — FlowHub AI
 
-**Estado: diseño (no desplegado).** Este documento prepara el despliegue para cuando
-se decida ejecutarlo. El esqueleto de Terraform vive en `infra/terraform/`.
+**Estado: IaC y pipeline COMPLETOS; sin aplicar (falta que el propietario cree los
+proyectos GCP).** Terraform validado en `infra/terraform/` (README con los pasos
+exactos del propietario); `deploy.yml` despliega staging al mergear a main y
+production al publicar release, vía WIF. Las imágenes Docker están verificadas
+end-to-end en local.
 
 ## 1. Arquitectura en GCP
 

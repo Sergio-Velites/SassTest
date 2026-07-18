@@ -92,14 +92,14 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 - commitlint en CI si aparecen commits fuera de convención.
 - Job de borrado real de usuarios soft-deleted (GDPR art. 17).
 
-## ⬜ Ciclo 10 — Despliegue GCP (código e IaC completos; activación requiere proyectos GCP del usuario)
+## ✅ Ciclo 10 — Despliegue GCP (COMPLETADO el código/IaC; activación = pasos del propietario)
 
 - [x] Dockerfiles multi-stage (pnpm deploy --legacy para bundles podados; base parametrizable `NODE_IMAGE`). Verificado en local: las 3 imágenes construyen, el job de migración corre, y el Invoice Intake Demo ejecuta `succeeded` atravesando SOLO contenedores. Job `docker-images` añadido al CI.
-- [ ] Módulos Terraform completos: Cloud Run ×3, Cloud SQL (private IP), Memorystore, Artifact Registry, Secret Manager, service accounts de mínimo privilegio, WIF pool/provider para GitHub Actions. `environments/staging` y `environments/production` instanciables con solo `project_id`.
+- [x] Módulo `stack` completo (APIs, VPC+PSA+connector, Cloud SQL 16 privado con backups/PITR y HA en prod, Memorystore, Artifact Registry, Secret Manager con secretos generados + IA vacíos, 4 SAs de mínimo privilegio, Cloud Run ×3 con probes/ingress correcto, WIF restringido al repo). `environments/staging|production` instanciables con `project_id`.
 - [x] Runner de migraciones de producción (`packages/database/src/migrate.ts`, drizzle-orm migrator, sin drizzle-kit en runtime; `node node_modules/@flowhub/database/dist/migrate.js` en la imagen del api). Verificado idempotente contra BD limpia. Los paquetes declaran `files` para que pnpm deploy incluya dist/migrations.
-- [ ] Workflow `deploy.yml`: build+push imágenes por SHA → migrate → deploy staging al mergear a main; production por release con environment protegido. Autenticación WIF, cero claves JSON.
-- [ ] `terraform validate` + `terraform plan` con backend local como smoke (sin aplicar — no hay proyecto GCP aún).
-- [ ] Documentar en GCP_DEPLOYMENT.md los pasos exactos que quedan para el usuario (crear proyectos, bucket de estado, `terraform apply`, variables del repo).
+- [x] `deploy.yml`: build+push por SHA → job de migraciones (`--wait`) → rollout de los 3 servicios → smoke de `/health`. Staging on main, production on release con GitHub environment. WIF, cero claves.
+- [x] `terraform validate` en verde en ambos environments (mirror local de providers; el registry está bloqueado en este sandbox). `terraform plan` requiere ADC del propietario — es exactamente el paso documentado que queda.
+- [x] Pasos del propietario documentados en `infra/terraform/README.md` (bucket de estado, tfvars, apply, variables de GitHub por environment) y GCP_DEPLOYMENT.md actualizado.
 - **BLOQUEO EXTERNO**: crear proyectos `flowhub-staging`/`flowhub-prod` con billing y ejecutar el apply es del usuario; todo lo demás queda listo.
 
 ## ⬜ Ciclo 11 — Framework de conectores reales + implementaciones

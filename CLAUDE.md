@@ -20,7 +20,7 @@ Objetivo de negocio: suscripción SaaS (Free → Enterprise) + comisión de mark
 
 ## 2. Estado actual del proyecto
 
-**Fase actual: BACKLOG MVP COMPLETO (Ciclos 1–9).** El MVP funciona end-to-end en local: registro→organización→catálogo→instalación→ejecución con IA mock y aprobaciones→historial/logs, desde la UI y por API, con 100 ejecuciones concurrentes verificadas. El usuario ha decidido (2026-07-18) continuar con TODO en este orden: **Ciclo 10 ✅** despliegue GCP hecho (Dockerfiles verificados, Terraform validado, deploy.yml; solo falta que el usuario cree los proyectos y aplique — pasos en infra/terraform/README.md), **Ciclo 11** conectores reales (Slack, Google, IMAP/SMTP, Holded — detrás de config, mocks siguen de default), **Ciclo 12** editor visual React Flow, **Ciclo 13** billing Stripe en test mode. IA se queda en mock por ahora. Detalle en `docs/product/BACKLOG.md`. — monorepo, docs,
+**Fase actual: BACKLOG MVP COMPLETO (Ciclos 1–9).** El MVP funciona end-to-end en local: registro→organización→catálogo→instalación→ejecución con IA mock y aprobaciones→historial/logs, desde la UI y por API, con 100 ejecuciones concurrentes verificadas. El usuario ha decidido (2026-07-18) continuar con TODO en este orden: **Ciclo 10 ✅** despliegue GCP hecho (Dockerfiles verificados, Terraform validado, deploy.yml; solo falta que el usuario cree los proyectos y aplique — pasos en infra/terraform/README.md), **Ciclo 11 ✅** conectores reales hechos (Slack, Google, IMAP/SMTP, Holded detrás de CONNECTOR_SECRETS_KEY; OAuth2+PKCE, secretos cifrados AES-256-GCM, UI `/connectors` con e2e; falta que el usuario registre las OAuth apps y pase client ids/secrets), **Ciclo 12** editor visual React Flow, **Ciclo 13** billing Stripe en test mode. IA se queda en mock por ahora. Detalle en `docs/product/BACKLOG.md`. — monorepo, docs,
 tipos core, CI, las tres apps arrancan (`pnpm dev`) y la base de datos está implementada:
 27 tablas Drizzle migradas y sembradas (`pnpm db:reset`). **La API de dominio está completa (auth, organizations, catálogo, workflows, ejecuciones, approvals — todo encolando vía JobQueue); faltan el motor que consume los jobs, los conectores mock y la UI real** — especificados en docs, llegan en
 los ciclos siguientes (ver §12 y `docs/product/BACKLOG.md`).
@@ -193,11 +193,15 @@ Modelo completo: `docs/security/SECURITY_MODEL.md`.
 | 1–2   | Estructura, documentación, ADRs, tipos core, CI                                    | ✅ Hecho    |
 | 3     | Scaffold real: Next.js en `apps/web`, Fastify en `apps/api`, pino en observability | ✅ Hecho    |
 | 4     | `packages/database`: Drizzle, migraciones de las 23+ tablas, seeds                 | ✅ Hecho    |
-| 5     | API base: auth ✅ + tenant middleware ✅; organizations, workflows, executions     | 🔶 En curso |
+| 5     | API base: auth ✅ + tenant middleware ✅; organizations, workflows, executions     | ✅ Hecho    |
 | 6     | Workflow engine + worker: executor, handlers, mocks, demo e2e                      | ✅ Hecho    |
 | 7     | Frontend MVP: login, dashboard, catálogo, ejecuciones, approvals, JSON             | ✅ Hecho    |
 | 8     | AI Gateway completo: templates BD, structured output, budget, providers reales     | ✅ Hecho    |
 | 9     | Hardening: aislamiento, rate limiting, audit, carga, deuda técnica                 | ✅ Hecho    |
+| 10    | Despliegue GCP: Dockerfiles, Terraform, deploy.yml con WIF (apply es del usuario)  | ✅ Hecho    |
+| 11    | Conectores reales: OAuth2+PKCE, secretos cifrados, Slack/Google/email/Holded, UI   | ✅ Hecho    |
+| 12    | Editor visual de workflows con React Flow                                          | ⬜ Pendiente |
+| 13    | Billing Stripe test mode: PaymentGateway, webhooks, límites de plan, upgrade       | ⬜ Pendiente |
 
 **Decisiones pendientes** (resolver con el usuario cuando toque):
 

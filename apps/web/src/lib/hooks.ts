@@ -8,6 +8,8 @@ import {
   ApiError,
   approvalsSchema,
   catalogSchema,
+  connectorAccountsSchema,
+  connectorCatalogSchema,
   executionSchema,
   executionsSchema,
   logsSchema,
@@ -182,5 +184,58 @@ export function useResolveApproval() {
         { method: 'POST', body: { decision: input.decision, comment: input.comment } },
       ),
     onSuccess: () => client.invalidateQueries({ queryKey: ['approvals'] }),
+  });
+}
+
+export function useConnectorCatalog() {
+  return useQuery({
+    queryKey: ['connectors', 'catalog'],
+    queryFn: () => apiFetch('/connectors', connectorCatalogSchema),
+  });
+}
+
+export function useConnectorAccounts() {
+  return useQuery({
+    queryKey: ['connectors', 'accounts'],
+    queryFn: () => apiFetch('/connector-accounts', connectorAccountsSchema),
+  });
+}
+
+export function useAuthorizeConnector() {
+  return useMutation({
+    mutationFn: (slug: string) =>
+      apiFetch(
+        `/connector-accounts/${slug}/authorize`,
+        z.object({ authorizationUrl: z.string() }),
+        {
+          method: 'POST',
+        },
+      ),
+    onSuccess: (data) => {
+      window.location.href = data.authorizationUrl;
+    },
+  });
+}
+
+export function useConnectApiKey() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { slug: string; name: string; credentials: Record<string, string> }) =>
+      apiFetch(`/connector-accounts/${input.slug}/connect`, z.object({ accountId: z.string() }), {
+        method: 'POST',
+        body: { name: input.name, credentials: input.credentials },
+      }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['connectors'] }),
+  });
+}
+
+export function useRevokeConnectorAccount() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (accountId: string) =>
+      apiFetch(`/connector-accounts/${accountId}/revoke`, z.object({ revoked: z.boolean() }), {
+        method: 'POST',
+      }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['connectors'] }),
   });
 }

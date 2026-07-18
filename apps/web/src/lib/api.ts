@@ -167,3 +167,28 @@ export const approvalsSchema = z.object({
     }),
   ),
 });
+
+export const connectorCatalogSchema = z.object({
+  connectors: z.array(
+    z.object({
+      slug: z.string(),
+      displayName: z.string(),
+      auth: z.enum(['none', 'api_key', 'oauth2']),
+      available: z.boolean(),
+      kind: z.enum(['mock', 'real']),
+    }),
+  ),
+});
+
+export const connectorAccountsSchema = z.object({
+  accounts: z.array(
+    z.object({
+      id: z.string(),
+      connectorSlug: z.string(),
+      name: z.string(),
+      authType: z.enum(['none', 'api_key', 'oauth2']),
+      status: z.enum(['active', 'revoked', 'error']),
+      createdAt: z.string(),
+    }),
+  ),
+});

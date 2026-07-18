@@ -13,6 +13,7 @@ const NAV = [
   { href: '/catalog', label: 'Catálogo' },
   { href: '/workflows', label: 'Workflows' },
   { href: '/approvals', label: 'Aprobaciones' },
+  { href: '/connectors', label: 'Conectores' },
 ];
 
 /** Authenticated layout: redirects to login/onboarding when needed. */

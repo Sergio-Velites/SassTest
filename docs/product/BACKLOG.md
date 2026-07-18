@@ -102,10 +102,10 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 - [x] Pasos del propietario documentados en `infra/terraform/README.md` (bucket de estado, tfvars, apply, variables de GitHub por environment) y GCP_DEPLOYMENT.md actualizado.
 - **BLOQUEO EXTERNO**: crear proyectos `flowhub-staging`/`flowhub-prod` con billing y ejecutar el apply es del usuario; todo lo demás queda listo.
 
-## ⬜ Ciclo 11 — Framework de conectores reales + implementaciones
+## ✅ Ciclo 11 — Framework de conectores reales + implementaciones
 
 - [x] Infraestructura OAuth2 genérica: authorization code + PKCE (S256), state firmado HMAC en cookie httpOnly con TTL 10min, callback con exchange, cifrado AES-256-GCM (`SecretCipher` + `DbSecretsStore`, tabla connector_secrets en migración 0003, ref `local:<id>`), helper de refresh, revocación que borra el secreto. Testeado end-to-end contra token endpoint falso (PKCE verificado, state forjado rechazado).
-- [~] API de cuentas de conector completa: GET /connectors (catálogo mock+real con disponibilidad), authorize/callback/list/revoke con audit y tenant scoping. **Falta la UI** (página /connectors en la web).
+- [x] API de cuentas de conector completa: GET /connectors (catálogo mock+real con disponibilidad), authorize/callback/list/revoke con audit y tenant scoping. UI en `/connectors`: catálogo real/mock con badges de disponibilidad, conexión OAuth (redirect a authorizationUrl), formularios api_key para email/holded, lista de cuentas con revocar, banners `?connected=`/`?error=` del callback. Verificado con e2e de navegador (Playwright).
 - [x] Slack real (`chat.postMessage`, retriabilidad por rate limit) — activable con SLACK_CLIENT_ID/SECRET. Testeado con fetch inyectado.
 - [x] Google real (Gmail readonly: fetch último email con adjunto y decodificación MIME básica; Drive: upload multipart) — activable con GOOGLE_CLIENT_ID/SECRET. Testeado con fetch inyectado; sin verificar contra API viva hasta tener OAuth app.
 - [x] Email genérico: SMTP send (nodemailer) + IMAP fetch con adjunto (imapflow+mailparser), credenciales cifradas conectadas por API key endpoint. SMTP testeado (jsonTransport); IMAP sin verificar contra servidor vivo.

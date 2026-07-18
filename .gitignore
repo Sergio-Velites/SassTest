@@ -50,3 +50,4 @@ infra/terraform/**/.terraform.lock.hcl
 # Local databases / dumps
 *.sqlite
 *.dump
+dump.rdb

@@ -94,9 +94,9 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 
 ## ⬜ Ciclo 10 — Despliegue GCP (código e IaC completos; activación requiere proyectos GCP del usuario)
 
-- [ ] Dockerfiles de producción para api, worker y web (standalone), construibles y arrancables en local.
+- [x] Dockerfiles multi-stage (pnpm deploy --legacy para bundles podados; base parametrizable `NODE_IMAGE`). Verificado en local: las 3 imágenes construyen, el job de migración corre, y el Invoice Intake Demo ejecuta `succeeded` atravesando SOLO contenedores. Job `docker-images` añadido al CI.
 - [ ] Módulos Terraform completos: Cloud Run ×3, Cloud SQL (private IP), Memorystore, Artifact Registry, Secret Manager, service accounts de mínimo privilegio, WIF pool/provider para GitHub Actions. `environments/staging` y `environments/production` instanciables con solo `project_id`.
-- [ ] Job de migraciones (misma imagen del api, comando migrate) previo a cada deploy.
+- [x] Runner de migraciones de producción (`packages/database/src/migrate.ts`, drizzle-orm migrator, sin drizzle-kit en runtime; `node node_modules/@flowhub/database/dist/migrate.js` en la imagen del api). Verificado idempotente contra BD limpia. Los paquetes declaran `files` para que pnpm deploy incluya dist/migrations.
 - [ ] Workflow `deploy.yml`: build+push imágenes por SHA → migrate → deploy staging al mergear a main; production por release con environment protegido. Autenticación WIF, cero claves JSON.
 - [ ] `terraform validate` + `terraform plan` con backend local como smoke (sin aplicar — no hay proyecto GCP aún).
 - [ ] Documentar en GCP_DEPLOYMENT.md los pasos exactos que quedan para el usuario (crear proyectos, bucket de estado, `terraform apply`, variables del repo).

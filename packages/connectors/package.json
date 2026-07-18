@@ -16,5 +16,8 @@
   "dependencies": {
     "@flowhub/shared": "workspace:*",
     "zod": "^3.24.0"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }

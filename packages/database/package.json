@@ -14,7 +14,8 @@
     "clean": "rm -rf dist .turbo *.tsbuildinfo",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "tsx src/seed.ts"
+    "db:seed": "tsx src/seed.ts",
+    "migrate:prod": "node dist/migrate.js"
   },
   "dependencies": {
     "@flowhub/shared": "workspace:*",
@@ -26,5 +27,9 @@
     "@types/pg": "^8.20.0",
     "drizzle-kit": "^0.31.10",
     "tsx": "^4.23.0"
-  }
+  },
+  "files": [
+    "dist",
+    "migrations"
+  ]
 }

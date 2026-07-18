@@ -65,3 +65,16 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  docker-images:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build api image
+        run: docker build -f apps/api/Dockerfile -t flowhub-api:ci .
+      - name: Build worker image
+        run: docker build -f apps/worker/Dockerfile -t flowhub-worker:ci .
+      - name: Build web image
+        run: docker build -f apps/web/Dockerfile -t flowhub-web:ci .

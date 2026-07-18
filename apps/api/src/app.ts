@@ -9,6 +9,7 @@ import { DbSecretsStore, OAUTH_PROVIDERS, SecretCipher } from '@flowhub/connecto
 import { createSecretRowStore, type Db } from '@flowhub/database';
 import type { JobQueue } from '@flowhub/jobs';
 import type { Logger } from '@flowhub/observability';
+import { MockPaymentGateway, StripePaymentGateway, type PaymentGateway } from '@flowhub/payments';
 import { type AppErrorCode, isAppError } from '@flowhub/shared';
 import fastify, { type FastifyError, type FastifyInstance } from 'fastify';
 import {
@@ -20,6 +21,7 @@ import {
 
 import { approvalRoutes } from './modules/approvals/routes.js';
 import { authRoutes } from './modules/auth/routes.js';
+import { billingRoutes } from './modules/billing/routes.js';
 import { catalogRoutes } from './modules/catalog/routes.js';
 import { connectorRoutes, type RealConnectorConfig } from './modules/connectors/routes.js';
 import { executionRoutes } from './modules/executions/routes.js';
@@ -49,6 +51,8 @@ export interface AppDeps {
   queue: JobQueue;
   /** Extra OAuth providers merged over the env-derived ones (tests). */
   extraOAuthProviders?: Map<string, RealConnectorConfig>;
+  /** Overrides the env-derived payment gateway (tests). */
+  paymentGateway?: PaymentGateway;
 }
 
 /**
@@ -62,6 +66,7 @@ export async function buildApp({
   db,
   queue,
   extraOAuthProviders,
+  paymentGateway,
 }: AppDeps): Promise<FastifyInstance> {
   if (!env.AUTH_SESSION_SECRET) {
     throw new Error('AUTH_SESSION_SECRET is required to build the API (see .env.example)');
@@ -148,6 +153,20 @@ export async function buildApp({
   await app.register(workflowRoutes({ db, logger }));
   await app.register(executionRoutes({ db, logger, queue }));
   await app.register(approvalRoutes({ db, logger, queue }));
+
+  // Billing: Stripe in test mode when keys exist, deterministic mock otherwise.
+  const gateway =
+    paymentGateway ??
+    (env.STRIPE_SECRET_KEY && env.STRIPE_WEBHOOK_SECRET
+      ? new StripePaymentGateway({
+          secretKey: env.STRIPE_SECRET_KEY,
+          webhookSecret: env.STRIPE_WEBHOOK_SECRET,
+        })
+      : new MockPaymentGateway());
+  if (gateway.kind === 'mock') {
+    logger.warn('STRIPE_SECRET_KEY not set — billing uses the local mock gateway');
+  }
+  await app.register(billingRoutes({ db, logger, gateway, webUrl: env.WEB_URL }));
 
   // Real connector support: secrets store + whichever OAuth apps are configured.
   const secrets = env.CONNECTOR_SECRETS_KEY

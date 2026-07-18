@@ -7,6 +7,8 @@ import {
   apiFetch,
   ApiError,
   approvalsSchema,
+  billingPlansSchema,
+  billingSubscriptionSchema,
   catalogSchema,
   connectorAccountsSchema,
   connectorCatalogSchema,
@@ -206,6 +208,45 @@ export function useResolveApproval() {
         { method: 'POST', body: { decision: input.decision, comment: input.comment } },
       ),
     onSuccess: () => client.invalidateQueries({ queryKey: ['approvals'] }),
+  });
+}
+
+export function useBillingPlans() {
+  return useQuery({
+    queryKey: ['billing', 'plans'],
+    queryFn: () => apiFetch('/billing/plans', billingPlansSchema),
+  });
+}
+
+export function useBillingSubscription() {
+  return useQuery({
+    queryKey: ['billing', 'subscription'],
+    queryFn: () => apiFetch('/billing/subscription', billingSubscriptionSchema),
+  });
+}
+
+export function useCheckout() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (planSlug: string) =>
+      apiFetch('/billing/checkout', z.object({ url: z.string() }), {
+        method: 'POST',
+        body: { planSlug },
+      }),
+    onSuccess: (data) => {
+      void client.invalidateQueries({ queryKey: ['billing'] });
+      window.location.href = data.url;
+    },
+  });
+}
+
+export function useBillingPortal() {
+  return useMutation({
+    mutationFn: () =>
+      apiFetch('/billing/portal', z.object({ url: z.string() }), { method: 'POST' }),
+    onSuccess: (data) => {
+      window.location.href = data.url;
+    },
   });
 }
 

@@ -14,3 +14,4 @@ Los ADRs no se editan tras aceptarse: se sustituyen (`superseded by`).
 | [0007](ADR-0007-ai-provider-abstraction.md) | Abstracción de providers de IA (AI Gateway)       | accepted |
 | [0008](ADR-0008-google-cloud-deployment.md) | Google Cloud como plataforma de despliegue        | accepted |
 | [0009](ADR-0009-github-security.md)         | Seguridad del repositorio GitHub                  | accepted |
+| [0010](ADR-0010-payment-gateway.md)         | Billing: Stripe test mode tras PaymentGateway     | accepted |

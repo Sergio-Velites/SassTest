@@ -9,6 +9,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 
 import { writeAudit } from '../../lib/audit.js';
+import { assertWithinPlanLimits } from '../../lib/limits.js';
 import { OrgRateLimiter } from '../../lib/org-rate-limit.js';
 import { requireAuth, requireTenant } from '../../plugins/auth.js';
 import { getCurrentVersion, getInstalledWorkflow } from '../workflows/service.js';
@@ -69,6 +70,7 @@ export function executionRoutes({ db, logger, queue }: ExecutionsDeps) {
         const tenant = request.tenant;
         if (!tenant) throw new AppError('FORBIDDEN', 'An active organization is required');
         orgLimiter.check(tenant.organizationId);
+        await assertWithinPlanLimits(db, tenant, 'executions');
         const installed = await getInstalledWorkflow(db, tenant, request.params.workflowId);
         if (installed.status !== 'active') {
           throw new AppError('CONFLICT', 'Workflow is not active');

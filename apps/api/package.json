@@ -25,6 +25,7 @@
     "@flowhub/database": "workspace:*",
     "@flowhub/jobs": "workspace:*",
     "@flowhub/observability": "workspace:*",
+    "@flowhub/payments": "workspace:*",
     "@flowhub/shared": "workspace:*",
     "@flowhub/workflow-engine": "workspace:*",
     "argon2": "^0.44.0",

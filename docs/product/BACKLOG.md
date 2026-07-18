@@ -122,13 +122,13 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 - [x] Guardar publica una nueva workflow_version: `PUT /workflows/:id` (valida con el engine, bump transaccional de is_current, regenera proyección, audit) + `GET /workflows/:id/versions`; historial visible en el detalle. Fix necesario: @fastify/cors por defecto solo permite GET/HEAD/POST — se añadió methods con PUT/PATCH/DELETE.
 - [x] E2e Playwright del flujo completo: instalar → editar (añadir transform, validación en vivo con JSON roto → guardar deshabilitado → arreglar) → conectar por drag → guardar (v2 en historial) → ejecutar → succeeded con el nodo nuevo ejecutado por el worker.
 
-## ⬜ Ciclo 13 — Billing Stripe (test mode)
+## ✅ Ciclo 13 — Billing Stripe (test mode)
 
-- [ ] Integración Stripe Checkout + Customer Portal para suscripciones sobre las tablas plans/subscriptions existentes, tras interfaz `PaymentGateway` (mock para tests/local sin claves).
-- [ ] Webhooks de Stripe (subscription created/updated/cancelled) con verificación de firma.
-- [ ] Enforcement de límites de plan (usuarios, workflows, ejecuciones/mes) leyendo plans.limits + usage_events.
-- [ ] Página de plan/upgrade en la web.
-- **BLOQUEO EXTERNO**: cuenta Stripe y claves (test mode basta para todo el desarrollo) y precios definitivos.
+- [x] `packages/payments` (ADR-0010): interfaz `PaymentGateway` + `StripePaymentGateway` sobre fetch (Checkout Sessions con price_data inline y metadata org/plan, Customer Portal) + `MockPaymentGateway` determinista. Sin claves el billing usa el mock y el upgrade se aplica síncrono; con STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET entra Stripe test mode. 6 tests del paquete.
+- [x] Webhook `POST /billing/webhooks/stripe` con verificación de firma HMAC-SHA256 (t/v1, tolerancia 5 min, timingSafeEqual, body crudo por scope de content-type propio): checkout.session.completed aplica plan por metadata; subscription.updated/deleted actualiza estado y al cancelar hace downgrade a free. Test con firma válida, inválida y cancelación.
+- [x] Enforcement de límites de plan (`apps/api/src/lib/limits.ts`): usuarios (invitaciones) y workflows (install/create) → 403; ejecuciones/mes (usage_events) → 429. -1 = ilimitado. Aplicado en las 4 rutas + tests (bloqueo en free, desbloqueo tras upgrade).
+- [x] Página `/billing`: plan actual con uso vs límites (barras), grid de planes con upgrade (redirect a checkout; mock = instantáneo), portal, banners `?upgraded=`/`?cancelled=`. E2e navegador: límite free alcanzado → upgrade a pro → desbloqueado.
+- **BLOQUEO EXTERNO**: cuenta Stripe y claves de test (sin ellas todo funciona con el mock) y precios definitivos.
 
 ## Post-MVP (sin ciclo asignado)
 

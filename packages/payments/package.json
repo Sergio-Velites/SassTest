@@ -1,0 +1,22 @@
+{
+  "name": "@flowhub/payments",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PaymentGateway abstraction: Stripe (test mode, fetch-based) and a deterministic mock for local/test",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "node --test \"dist/**/*.test.js\"",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "zod": "^3.24.0"
+  },
+  "files": [
+    "dist"
+  ]
+}

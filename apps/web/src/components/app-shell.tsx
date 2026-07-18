@@ -14,6 +14,7 @@ const NAV = [
   { href: '/workflows', label: 'Workflows' },
   { href: '/approvals', label: 'Aprobaciones' },
   { href: '/connectors', label: 'Conectores' },
+  { href: '/billing', label: 'Plan' },
 ];
 
 /** Authenticated layout: redirects to login/onboarding when needed. */

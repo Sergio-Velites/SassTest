@@ -179,6 +179,30 @@ export const workflowVersionsSchema = z.object({
   ),
 });
 
+export const billingPlansSchema = z.object({
+  plans: z.array(
+    z.object({
+      slug: z.string(),
+      name: z.string(),
+      priceCents: z.number(),
+      currency: z.string(),
+      limits: z.record(z.number()),
+    }),
+  ),
+});
+
+export const billingSubscriptionSchema = z.object({
+  planSlug: z.string(),
+  status: z.string(),
+  limits: z.record(z.number()),
+  usage: z.object({
+    users: z.number(),
+    workflows: z.number(),
+    executionsThisMonth: z.number(),
+  }),
+  gateway: z.enum(['mock', 'stripe']),
+});
+
 export const connectorCatalogSchema = z.object({
   connectors: z.array(
     z.object({

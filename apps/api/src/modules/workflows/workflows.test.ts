@@ -110,6 +110,13 @@ test('invitation flow adds a member with the invited role', { skip: skipWithoutD
   const t = await createTestApp();
   try {
     const { cookie: ownerCookie } = await signupWithOrg(t, 'inviter');
+    // free allows a single user — upgrade first (mock checkout is synchronous).
+    await t.app.inject({
+      method: 'POST',
+      url: '/billing/checkout',
+      headers: { cookie: ownerCookie },
+      payload: { planSlug: 'starter' },
+    });
     const invite = await t.app.inject({
       method: 'POST',
       url: '/organizations/current/invitations',
@@ -264,6 +271,12 @@ test('viewer role cannot install workflows (FORBIDDEN)', { skip: skipWithoutDb }
   try {
     const versionId = await seedPublishedTemplate(t);
     const { cookie: ownerCookie } = await signupWithOrg(t, 'rbac-owner');
+    await t.app.inject({
+      method: 'POST',
+      url: '/billing/checkout',
+      headers: { cookie: ownerCookie },
+      payload: { planSlug: 'starter' },
+    });
     const invite = await t.app.inject({
       method: 'POST',
       url: '/organizations/current/invitations',

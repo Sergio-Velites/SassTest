@@ -68,6 +68,9 @@ importers:
       '@flowhub/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@flowhub/payments':
+        specifier: workspace:*
+        version: link:../../packages/payments
       '@flowhub/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -244,6 +247,12 @@ importers:
       pino:
         specifier: ^10.3.1
         version: 10.3.1
+
+  packages/payments:
+    dependencies:
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
 
   packages/shared:
     dependencies:

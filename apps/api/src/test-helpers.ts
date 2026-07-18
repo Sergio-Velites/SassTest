@@ -22,7 +22,7 @@ export interface TestApp {
 }
 
 export async function createTestApp(
-  options?: Pick<AppDeps, 'extraOAuthProviders'>,
+  options?: Pick<AppDeps, 'extraOAuthProviders' | 'paymentGateway'>,
 ): Promise<TestApp> {
   const env = loadEnv({
     NODE_ENV: 'test',
@@ -39,6 +39,7 @@ export async function createTestApp(
     db: handle.db,
     queue,
     ...(options?.extraOAuthProviders ? { extraOAuthProviders: options.extraOAuthProviders } : {}),
+    ...(options?.paymentGateway ? { paymentGateway: options.paymentGateway } : {}),
   });
   // Route raising a typed domain error, to exercise the error handler.
   app.get('/boom', () => {

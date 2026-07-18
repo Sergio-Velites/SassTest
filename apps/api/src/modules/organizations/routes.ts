@@ -10,6 +10,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 
 import { writeAudit } from '../../lib/audit.js';
+import { assertWithinPlanLimits } from '../../lib/limits.js';
 import { requireAuth, requireTenant } from '../../plugins/auth.js';
 
 const roleSchema = z.enum(['owner', 'admin', 'member', 'viewer']);
@@ -187,6 +188,7 @@ export function organizationRoutes({ db, logger }: OrganizationsDeps) {
       handler: async (request, reply) => {
         const tenant = request.tenant;
         if (!tenant) throw new AppError('FORBIDDEN', 'An active organization is required');
+        await assertWithinPlanLimits(db, tenant, 'users');
         const { email, role } = request.body;
         const token = randomBytes(32).toString('hex');
         const expiresAt = new Date(Date.now() + INVITATION_TTL_MS);

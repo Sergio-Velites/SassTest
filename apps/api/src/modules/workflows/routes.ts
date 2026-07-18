@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { ZodError } from 'zod';
 
 import { writeAudit } from '../../lib/audit.js';
+import { assertWithinPlanLimits } from '../../lib/limits.js';
 import { requireAuth, requireTenant } from '../../plugins/auth.js';
 import {
   createInstalledWorkflow,
@@ -58,6 +59,7 @@ export function workflowRoutes({ db, logger }: WorkflowsDeps) {
       handler: async (request, reply) => {
         const tenant = request.tenant;
         if (!tenant) throw new AppError('FORBIDDEN', 'An active organization is required');
+        await assertWithinPlanLimits(db, tenant, 'workflows');
 
         // Only published versions of published templates are installable.
         const [row] = await db
@@ -129,6 +131,7 @@ export function workflowRoutes({ db, logger }: WorkflowsDeps) {
       handler: async (request, reply) => {
         const tenant = request.tenant;
         if (!tenant) throw new AppError('FORBIDDEN', 'An active organization is required');
+        await assertWithinPlanLimits(db, tenant, 'workflows');
         let definition;
         try {
           definition = parseWorkflowDefinition(request.body.definition);

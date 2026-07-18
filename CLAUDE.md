@@ -188,18 +188,18 @@ Modelo completo: `docs/security/SECURITY_MODEL.md`.
 
 ## 12. Próximas fases (resumen — detalle en docs/product/BACKLOG.md)
 
-| Ciclo | Contenido                                                                          | Estado      |
-| ----- | ---------------------------------------------------------------------------------- | ----------- |
-| 1–2   | Estructura, documentación, ADRs, tipos core, CI                                    | ✅ Hecho    |
-| 3     | Scaffold real: Next.js en `apps/web`, Fastify en `apps/api`, pino en observability | ✅ Hecho    |
-| 4     | `packages/database`: Drizzle, migraciones de las 23+ tablas, seeds                 | ✅ Hecho    |
-| 5     | API base: auth ✅ + tenant middleware ✅; organizations, workflows, executions     | ✅ Hecho    |
-| 6     | Workflow engine + worker: executor, handlers, mocks, demo e2e                      | ✅ Hecho    |
-| 7     | Frontend MVP: login, dashboard, catálogo, ejecuciones, approvals, JSON             | ✅ Hecho    |
-| 8     | AI Gateway completo: templates BD, structured output, budget, providers reales     | ✅ Hecho    |
-| 9     | Hardening: aislamiento, rate limiting, audit, carga, deuda técnica                 | ✅ Hecho    |
-| 10    | Despliegue GCP: Dockerfiles, Terraform, deploy.yml con WIF (apply es del usuario)  | ✅ Hecho    |
-| 11    | Conectores reales: OAuth2+PKCE, secretos cifrados, Slack/Google/email/Holded, UI   | ✅ Hecho    |
+| Ciclo | Contenido                                                                          | Estado       |
+| ----- | ---------------------------------------------------------------------------------- | ------------ |
+| 1–2   | Estructura, documentación, ADRs, tipos core, CI                                    | ✅ Hecho     |
+| 3     | Scaffold real: Next.js en `apps/web`, Fastify en `apps/api`, pino en observability | ✅ Hecho     |
+| 4     | `packages/database`: Drizzle, migraciones de las 23+ tablas, seeds                 | ✅ Hecho     |
+| 5     | API base: auth ✅ + tenant middleware ✅; organizations, workflows, executions     | ✅ Hecho     |
+| 6     | Workflow engine + worker: executor, handlers, mocks, demo e2e                      | ✅ Hecho     |
+| 7     | Frontend MVP: login, dashboard, catálogo, ejecuciones, approvals, JSON             | ✅ Hecho     |
+| 8     | AI Gateway completo: templates BD, structured output, budget, providers reales     | ✅ Hecho     |
+| 9     | Hardening: aislamiento, rate limiting, audit, carga, deuda técnica                 | ✅ Hecho     |
+| 10    | Despliegue GCP: Dockerfiles, Terraform, deploy.yml con WIF (apply es del usuario)  | ✅ Hecho     |
+| 11    | Conectores reales: OAuth2+PKCE, secretos cifrados, Slack/Google/email/Holded, UI   | ✅ Hecho     |
 | 12    | Editor visual de workflows con React Flow                                          | ⬜ Pendiente |
 | 13    | Billing Stripe test mode: PaymentGateway, webhooks, límites de plan, upgrade       | ⬜ Pendiente |
 

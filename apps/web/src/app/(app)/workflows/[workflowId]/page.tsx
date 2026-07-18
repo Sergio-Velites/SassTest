@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 
 import { Button, Card, ErrorBox, Spinner, StatusBadge } from '../../../../components/ui';
+import { WorkflowGraph } from '../../../../components/workflow-graph';
 import { useExecutions, useRunWorkflow, useWorkflow } from '../../../../lib/hooks';
 
 export default function WorkflowDetailPage() {
@@ -39,6 +40,10 @@ export default function WorkflowDetailPage() {
         </Button>
       </div>
       {run.error ? <ErrorBox message={run.error.message} /> : null}
+
+      <Card title="Grafo del workflow">
+        <WorkflowGraph definition={data.definition} />
+      </Card>
 
       <Card title="Ejecuciones de este workflow">
         {(executions.data?.executions.length ?? 0) === 0 ? (

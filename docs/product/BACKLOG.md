@@ -115,7 +115,7 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 
 ## ⬜ Ciclo 12 — Editor visual de workflows (React Flow)
 
-- [ ] Vista de grafo read-only en el detalle de workflow (nodos+edges desde la proyección ya persistida).
+- [x] Vista de grafo read-only en el detalle de workflow: componente `WorkflowGraph` (@xyflow/react v12) con auto-layout por capas (longest-path desde el trigger, acotado contra ciclos), nodos custom con badge por kind y detalle del config (conector/acción, template IA, expresión), etiquetas de rama en edges. Verificado con e2e Playwright sobre el Invoice Intake Demo (11 nodos/11 edges).
 - [ ] Edición: añadir/eliminar/conectar nodos, panel de configuración por tipo de nodo (formularios desde los paramsSchema Zod de conectores/kinds).
 - [ ] Validación en vivo con workflowDefinitionSchema y errores señalando el nodo.
 - [ ] Guardar como nueva workflow_version (is_current) reutilizando el write-path existente; historial de versiones visible.

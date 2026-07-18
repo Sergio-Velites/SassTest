@@ -104,8 +104,8 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 
 ## ⬜ Ciclo 11 — Framework de conectores reales + implementaciones
 
-- [ ] Infraestructura OAuth2 genérica: authorization code + PKCE, callback en la API, cifrado AES-256-GCM de tokens (clave por env `CONNECTOR_SECRETS_KEY`), refresh automático, revocación; connector_accounts + connector_secrets_metadata ya existen.
-- [ ] API + UI de cuentas de conector: conectar/listar/revocar por organización (audit incluido).
+- [x] Infraestructura OAuth2 genérica: authorization code + PKCE (S256), state firmado HMAC en cookie httpOnly con TTL 10min, callback con exchange, cifrado AES-256-GCM (`SecretCipher` + `DbSecretsStore`, tabla connector_secrets en migración 0003, ref `local:<id>`), helper de refresh, revocación que borra el secreto. Testeado end-to-end contra token endpoint falso (PKCE verificado, state forjado rechazado).
+- [~] API de cuentas de conector completa: GET /connectors (catálogo mock+real con disponibilidad), authorize/callback/list/revoke con audit y tenant scoping. **Falta la UI** (página /connectors en la web).
 - [ ] Slack real (chat.postMessage; OAuth v2) — activable con SLACK_CLIENT_ID/SECRET.
 - [ ] Google real (Gmail readonly + Drive files; OAuth Google) — activable con GOOGLE_CLIENT_ID/SECRET.
 - [ ] Email genérico IMAP/SMTP (sin OAuth; credenciales cifradas) — funciona con cualquier proveedor.

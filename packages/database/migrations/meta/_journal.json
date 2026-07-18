@@ -22,6 +22,13 @@
       "when": 1783169393201,
       "tag": "0002_old_norman_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784400476648,
+      "tag": "0003_lying_bloodstrike",
+      "breakpoints": true
     }
   ]
 }

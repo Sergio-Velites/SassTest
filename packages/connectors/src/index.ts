@@ -10,3 +10,5 @@
 
 export * from './connector.js';
 export * from './mocks.js';
+export * from './crypto.js';
+export * from './oauth.js';

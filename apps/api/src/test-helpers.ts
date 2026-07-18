@@ -5,7 +5,7 @@ import { createLogger } from '@flowhub/observability';
 import { AppError } from '@flowhub/shared';
 import type { FastifyInstance } from 'fastify';
 
-import { buildApp } from './app.js';
+import { buildApp, type AppDeps } from './app.js';
 
 export const databaseUrl = process.env['DATABASE_URL'];
 /** API tests need a live database; skip cleanly on machines without one. */
@@ -21,11 +21,14 @@ export interface TestApp {
   close(): Promise<void>;
 }
 
-export async function createTestApp(): Promise<TestApp> {
+export async function createTestApp(
+  options?: Pick<AppDeps, 'extraOAuthProviders'>,
+): Promise<TestApp> {
   const env = loadEnv({
     NODE_ENV: 'test',
     LOG_LEVEL: 'error',
     AUTH_SESSION_SECRET: 'test-session-secret-not-for-production',
+    CONNECTOR_SECRETS_KEY: 'f'.repeat(64),
     ...(databaseUrl ? { DATABASE_URL: databaseUrl } : {}),
   });
   const handle = createDb(databaseUrl as string, { maxConnections: 3 });
@@ -35,6 +38,7 @@ export async function createTestApp(): Promise<TestApp> {
     logger: createLogger('error', { app: 'api-test' }),
     db: handle.db,
     queue,
+    ...(options?.extraOAuthProviders ? { extraOAuthProviders: options.extraOAuthProviders } : {}),
   });
   // Route raising a typed domain error, to exercise the error handler.
   app.get('/boom', () => {

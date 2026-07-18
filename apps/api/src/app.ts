@@ -5,7 +5,8 @@ import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import type { Env } from '@flowhub/config';
-import type { Db } from '@flowhub/database';
+import { DbSecretsStore, OAUTH_PROVIDERS, SecretCipher } from '@flowhub/connectors';
+import { createSecretRowStore, type Db } from '@flowhub/database';
 import type { JobQueue } from '@flowhub/jobs';
 import type { Logger } from '@flowhub/observability';
 import { type AppErrorCode, isAppError } from '@flowhub/shared';
@@ -20,6 +21,7 @@ import {
 import { approvalRoutes } from './modules/approvals/routes.js';
 import { authRoutes } from './modules/auth/routes.js';
 import { catalogRoutes } from './modules/catalog/routes.js';
+import { connectorRoutes, type RealConnectorConfig } from './modules/connectors/routes.js';
 import { executionRoutes } from './modules/executions/routes.js';
 import { healthRoutes } from './modules/health/routes.js';
 import { organizationRoutes } from './modules/organizations/routes.js';
@@ -45,6 +47,8 @@ export interface AppDeps {
   logger: Logger;
   db: Db;
   queue: JobQueue;
+  /** Extra OAuth providers merged over the env-derived ones (tests). */
+  extraOAuthProviders?: Map<string, RealConnectorConfig>;
 }
 
 /**
@@ -52,7 +56,13 @@ export interface AppDeps {
  * Route modules plug in under src/modules/<domain>/ (Cycle 5).
  * Kept side-effect free (no listen) so tests can use inject().
  */
-export async function buildApp({ env, logger, db, queue }: AppDeps): Promise<FastifyInstance> {
+export async function buildApp({
+  env,
+  logger,
+  db,
+  queue,
+  extraOAuthProviders,
+}: AppDeps): Promise<FastifyInstance> {
   if (!env.AUTH_SESSION_SECRET) {
     throw new Error('AUTH_SESSION_SECRET is required to build the API (see .env.example)');
   }
@@ -136,6 +146,46 @@ export async function buildApp({ env, logger, db, queue }: AppDeps): Promise<Fas
   await app.register(workflowRoutes({ db, logger }));
   await app.register(executionRoutes({ db, logger, queue }));
   await app.register(approvalRoutes({ db, logger, queue }));
+
+  // Real connector support: secrets store + whichever OAuth apps are configured.
+  const secrets = env.CONNECTOR_SECRETS_KEY
+    ? new DbSecretsStore(createSecretRowStore(db), new SecretCipher(env.CONNECTOR_SECRETS_KEY))
+    : null;
+  const oauthProviders = new Map<string, RealConnectorConfig>();
+  if (env.SLACK_CLIENT_ID && env.SLACK_CLIENT_SECRET) {
+    const slack = OAUTH_PROVIDERS['slack'];
+    if (slack) {
+      oauthProviders.set('slack', {
+        provider: slack,
+        clientId: env.SLACK_CLIENT_ID,
+        clientSecret: env.SLACK_CLIENT_SECRET,
+      });
+    }
+  }
+  if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
+    const google = OAUTH_PROVIDERS['google'];
+    if (google) {
+      oauthProviders.set('google', {
+        provider: google,
+        clientId: env.GOOGLE_CLIENT_ID,
+        clientSecret: env.GOOGLE_CLIENT_SECRET,
+      });
+    }
+  }
+  for (const [slug, config] of extraOAuthProviders ?? new Map()) {
+    oauthProviders.set(slug, config);
+  }
+  await app.register(
+    connectorRoutes({
+      db,
+      logger,
+      secrets,
+      oauthProviders,
+      apiPublicUrl: env.API_PUBLIC_URL,
+      webUrl: env.WEB_URL,
+      stateSecret: env.AUTH_SESSION_SECRET,
+    }),
+  );
 
   return app;
 }

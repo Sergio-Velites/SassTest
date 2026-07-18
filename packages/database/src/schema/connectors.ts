@@ -57,3 +57,17 @@ export const connectorSecretsMetadata = pgTable(
     check('connector_secrets_metadata_kind_check', sql`${t.kind} IN ('api_key', 'oauth_tokens')`),
   ],
 );
+
+/**
+ * Local secrets backend: AES-256-GCM ciphertext rows addressed by
+ * connector_secrets_metadata.secret_ref = 'local:<id>'. In GCP the ref
+ * points at Secret Manager instead (SECURITY_MODEL.md §5).
+ */
+export const connectorSecrets = pgTable('connector_secrets', {
+  id: id(),
+  organizationId: uuid('organization_id')
+    .notNull()
+    .references(() => organizations.id),
+  ciphertext: text('ciphertext').notNull(),
+  ...timestamps,
+});

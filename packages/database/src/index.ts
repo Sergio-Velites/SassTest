@@ -11,4 +11,5 @@
 export const TENANT_COLUMN = 'organization_id' as const;
 
 export * from './client.js';
+export * from './secrets-repo.js';
 export * as schema from './schema/index.js';

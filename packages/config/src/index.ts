@@ -22,6 +22,20 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
   AI_MONTHLY_COST_CAP_USD: z.coerce.number().nonnegative().default(50),
+
+  // Real connectors (Cycle 11). All optional: without credentials the
+  // catalog marks each provider as unavailable and mocks keep working.
+  API_PUBLIC_URL: z.string().url().default('http://localhost:3001'),
+  WEB_URL: z.string().url().default('http://localhost:3000'),
+  /** 64 hex chars (32 bytes) — AES-256-GCM key for connector credentials. */
+  CONNECTOR_SECRETS_KEY: z
+    .string()
+    .regex(/^[0-9a-fA-F]{64}$/)
+    .optional(),
+  SLACK_CLIENT_ID: z.string().optional(),
+  SLACK_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

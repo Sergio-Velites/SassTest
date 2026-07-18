@@ -85,6 +85,48 @@ export async function regenerateProjection(
   }
 }
 
+/**
+ * Publishes a new version of an installed workflow: bumps the version number,
+ * flips is_current atomically and regenerates the node/edge projection. The
+ * write-path mirrors createInstalledWorkflow so the executor sees no
+ * difference between v1 and edited versions.
+ */
+export async function createWorkflowVersion(
+  db: Db,
+  tenant: TenantContext,
+  installedWorkflowId: string,
+  definition: WorkflowDefinition,
+): Promise<{ workflowVersionId: string; version: number }> {
+  const current = await getCurrentVersion(db, tenant, installedWorkflowId);
+  const next = await db.transaction(async (tx) => {
+    await tx
+      .update(schema.workflowVersions)
+      .set({ isCurrent: false })
+      .where(
+        and(
+          eq(schema.workflowVersions.installedWorkflowId, installedWorkflowId),
+          eq(schema.workflowVersions.organizationId, tenant.organizationId),
+          eq(schema.workflowVersions.isCurrent, true),
+        ),
+      );
+    const [inserted] = await tx
+      .insert(schema.workflowVersions)
+      .values({
+        organizationId: tenant.organizationId,
+        installedWorkflowId,
+        version: current.version + 1,
+        definition,
+        isCurrent: true,
+        createdBy: tenant.userId,
+      })
+      .returning();
+    if (!inserted) throw new AppError('INTERNAL_ERROR', 'Failed to create workflow version');
+    return inserted;
+  });
+  await regenerateProjection(db, tenant, next.id, definition);
+  return { workflowVersionId: next.id, version: next.version };
+}
+
 /** Loads an installed workflow, tenant-scoped. NOT_FOUND hides foreign rows. */
 export async function getInstalledWorkflow(db: Db, tenant: TenantContext, id: string) {
   const [installed] = await db

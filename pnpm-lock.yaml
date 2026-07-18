@@ -96,6 +96,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@flowhub/workflow-engine':
+        specifier: workspace:*
+        version: link:../../packages/workflow-engine
       '@tanstack/react-query':
         specifier: ^5.101.2
         version: 5.101.2(react@19.2.7)

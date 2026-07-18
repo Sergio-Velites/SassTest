@@ -14,6 +14,7 @@
     "clean": "rm -rf .next .turbo dist *.tsbuildinfo"
   },
   "dependencies": {
+    "@flowhub/workflow-engine": "workspace:*",
     "@tanstack/react-query": "^5.101.2",
     "@xyflow/react": "^12.11.2",
     "next": "^15.5.20",

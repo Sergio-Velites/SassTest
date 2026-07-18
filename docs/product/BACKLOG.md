@@ -88,6 +88,7 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 - Providers reales de IA sin verificar contra APIs vivas (no hay claves); probar al configurarlas.
 - Tests del frontend (hoy solo e2e manual con Playwright); considerar Playwright en CI.
 - Particionado por mes de workflow_execution_logs cuando crezca el volumen.
+- Editor visual: formularios de config generados desde los paramsSchema Zod de conectores/kinds (hoy el panel edita JSON con plantillas por tipo).
 - RLS de PostgreSQL como segunda capa de aislamiento (diseñado en ADR-0006).
 - commitlint en CI si aparecen commits fuera de convención.
 - Job de borrado real de usuarios soft-deleted (GDPR art. 17).
@@ -113,13 +114,13 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 - [x] `createWorkerConnectorRegistry`: mocks siempre; los reales se suman con CONNECTOR_SECRETS_KEY. Resolución de credenciales tenant-scoped con refresh OAuth transparente (persistiendo tokens rotados) y error boundary tipado. El engine pasa `connectorAccountId` desde el config del nodo. Test de integración con BD viva (resolución, cross-tenant, cuenta faltante). Endpoint POST /connector-accounts/:slug/connect para api_key (email/holded).
 - **BLOQUEO EXTERNO**: registrar las apps OAuth (Google Cloud Console, api.slack.com) y pasar client ids/secrets por Secret Manager/.env es del usuario.
 
-## ⬜ Ciclo 12 — Editor visual de workflows (React Flow)
+## ✅ Ciclo 12 — Editor visual de workflows (React Flow)
 
 - [x] Vista de grafo read-only en el detalle de workflow: componente `WorkflowGraph` (@xyflow/react v12) con auto-layout por capas (longest-path desde el trigger, acotado contra ciclos), nodos custom con badge por kind y detalle del config (conector/acción, template IA, expresión), etiquetas de rama en edges. Verificado con e2e Playwright sobre el Invoice Intake Demo (11 nodos/11 edges).
-- [ ] Edición: añadir/eliminar/conectar nodos, panel de configuración por tipo de nodo (formularios desde los paramsSchema Zod de conectores/kinds).
-- [ ] Validación en vivo con workflowDefinitionSchema y errores señalando el nodo.
-- [ ] Guardar como nueva workflow_version (is_current) reutilizando el write-path existente; historial de versiones visible.
-- [ ] E2e Playwright del flujo editar→guardar→ejecutar.
+- [x] Edición en `/workflows/:id/edit`: añadir nodos por kind (con config por defecto documentado), eliminar nodos (limpia sus edges), conectar arrastrando entre handles, panel lateral por selección (nombre + config JSON por tipo de nodo; edges: rama editable + eliminar). Nota: el panel edita el config como JSON con plantillas por kind — los formularios generados desde paramsSchema Zod quedan como mejora post-MVP (deuda apuntada abajo).
+- [x] Validación en vivo con el `workflowDefinitionSchema` real del engine (apps/web depende de @flowhub/workflow-engine) + parseo de JSON por nodo; los issues se listan y los nodos afectados se marcan en rojo; guardar se deshabilita hasta estar válido.
+- [x] Guardar publica una nueva workflow_version: `PUT /workflows/:id` (valida con el engine, bump transaccional de is_current, regenera proyección, audit) + `GET /workflows/:id/versions`; historial visible en el detalle. Fix necesario: @fastify/cors por defecto solo permite GET/HEAD/POST — se añadió methods con PUT/PATCH/DELETE.
+- [x] E2e Playwright del flujo completo: instalar → editar (añadir transform, validación en vivo con JSON roto → guardar deshabilitado → arreglar) → conectar por drag → guardar (v2 en historial) → ejecutar → succeeded con el nodo nuevo ejecutado por el worker.
 
 ## ⬜ Ciclo 13 — Billing Stripe (test mode)
 

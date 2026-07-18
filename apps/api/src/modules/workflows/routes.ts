@@ -11,7 +11,12 @@ import { ZodError } from 'zod';
 
 import { writeAudit } from '../../lib/audit.js';
 import { requireAuth, requireTenant } from '../../plugins/auth.js';
-import { createInstalledWorkflow, getCurrentVersion, getInstalledWorkflow } from './service.js';
+import {
+  createInstalledWorkflow,
+  createWorkflowVersion,
+  getCurrentVersion,
+  getInstalledWorkflow,
+} from './service.js';
 
 const installedSummarySchema = z.object({
   id: z.string().uuid(),
@@ -177,6 +182,101 @@ export function workflowRoutes({ db, logger }: WorkflowsDeps) {
             status: w.status as 'active' | 'paused' | 'archived',
             fromTemplateVersionId: w.workflowTemplateVersionId,
             createdAt: w.createdAt.toISOString(),
+          })),
+        });
+      },
+    });
+
+    app.route({
+      method: 'PUT',
+      url: '/workflows/:workflowId',
+      preHandler: [auth, requireTenant('admin')],
+      schema: {
+        tags: ['workflows'],
+        params: z.object({ workflowId: z.string().uuid() }),
+        body: z.object({
+          /** Raw workflow definition JSON — validated by the engine schema. */
+          definition: z.record(z.unknown()),
+        }),
+        response: {
+          200: z.object({ workflowVersionId: z.string().uuid(), version: z.number() }),
+          400: errorResponseSchema,
+          404: errorResponseSchema,
+        },
+      },
+      handler: async (request, reply) => {
+        const tenant = request.tenant;
+        if (!tenant) throw new AppError('FORBIDDEN', 'An active organization is required');
+        const installed = await getInstalledWorkflow(db, tenant, request.params.workflowId);
+        let definition;
+        try {
+          definition = parseWorkflowDefinition(request.body.definition);
+        } catch (error) {
+          const detail =
+            error instanceof ZodError
+              ? error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`).join('; ')
+              : 'invalid definition';
+          throw new AppError('VALIDATION_ERROR', `Invalid workflow definition — ${detail}`);
+        }
+        const result = await createWorkflowVersion(db, tenant, installed.id, definition);
+        await writeAudit(db, {
+          organizationId: tenant.organizationId,
+          actorUserId: tenant.userId,
+          action: 'workflow.version_created',
+          resourceType: 'installed_workflow',
+          resourceId: installed.id,
+          metadata: { version: result.version },
+        });
+        logger.info('workflow version created', {
+          organizationId: tenant.organizationId,
+          installedWorkflowId: installed.id,
+          version: result.version,
+        });
+        return reply.status(200).send(result);
+      },
+    });
+
+    app.route({
+      method: 'GET',
+      url: '/workflows/:workflowId/versions',
+      preHandler: [auth, requireTenant('viewer')],
+      schema: {
+        tags: ['workflows'],
+        params: z.object({ workflowId: z.string().uuid() }),
+        response: {
+          200: z.object({
+            versions: z.array(
+              z.object({
+                id: z.string().uuid(),
+                version: z.number(),
+                isCurrent: z.boolean(),
+                createdAt: z.string(),
+              }),
+            ),
+          }),
+          404: errorResponseSchema,
+        },
+      },
+      handler: async (request, reply) => {
+        const tenant = request.tenant;
+        if (!tenant) throw new AppError('FORBIDDEN', 'An active organization is required');
+        const installed = await getInstalledWorkflow(db, tenant, request.params.workflowId);
+        const rows = await db
+          .select()
+          .from(schema.workflowVersions)
+          .where(
+            and(
+              eq(schema.workflowVersions.installedWorkflowId, installed.id),
+              eq(schema.workflowVersions.organizationId, tenant.organizationId),
+            ),
+          )
+          .orderBy(desc(schema.workflowVersions.version));
+        return reply.status(200).send({
+          versions: rows.map((v) => ({
+            id: v.id,
+            version: v.version,
+            isCurrent: v.isCurrent,
+            createdAt: v.createdAt.toISOString(),
           })),
         });
       },

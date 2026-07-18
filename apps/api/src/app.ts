@@ -84,6 +84,8 @@ export async function buildApp({
   await app.register(cors, {
     origin: env.CORS_ALLOWED_ORIGINS.split(',').map((o) => o.trim()),
     credentials: true,
+    // @fastify/cors defaults to GET,HEAD,POST — the editor publishes versions with PUT.
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'],
   });
 
   await app.register(rateLimit, {

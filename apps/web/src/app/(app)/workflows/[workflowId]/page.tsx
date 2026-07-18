@@ -5,11 +5,17 @@ import { useParams, useRouter } from 'next/navigation';
 
 import { Button, Card, ErrorBox, Spinner, StatusBadge } from '../../../../components/ui';
 import { WorkflowGraph } from '../../../../components/workflow-graph';
-import { useExecutions, useRunWorkflow, useWorkflow } from '../../../../lib/hooks';
+import {
+  useExecutions,
+  useRunWorkflow,
+  useWorkflow,
+  useWorkflowVersions,
+} from '../../../../lib/hooks';
 
 export default function WorkflowDetailPage() {
   const params = useParams<{ workflowId: string }>();
   const workflow = useWorkflow(params.workflowId);
+  const versions = useWorkflowVersions(params.workflowId);
   const executions = useExecutions({ workflowId: params.workflowId });
   const run = useRunWorkflow();
   const router = useRouter();
@@ -28,16 +34,25 @@ export default function WorkflowDetailPage() {
             <StatusBadge status={data.status} /> · versión {data.currentVersion}
           </p>
         </div>
-        <Button
-          disabled={run.isPending || data.status !== 'active'}
-          onClick={() =>
-            run.mutate(data.id, {
-              onSuccess: (r) => router.push(`/executions/${r.executionId}`),
-            })
-          }
-        >
-          {run.isPending ? 'Lanzando…' : '▶ Ejecutar ahora'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => router.push(`/workflows/${data.id}/edit`)}
+            data-testid="edit-workflow"
+          >
+            ✎ Editar
+          </Button>
+          <Button
+            disabled={run.isPending || data.status !== 'active'}
+            onClick={() =>
+              run.mutate(data.id, {
+                onSuccess: (r) => router.push(`/executions/${r.executionId}`),
+              })
+            }
+          >
+            {run.isPending ? 'Lanzando…' : '▶ Ejecutar ahora'}
+          </Button>
+        </div>
       </div>
       {run.error ? <ErrorBox message={run.error.message} /> : null}
 
@@ -66,6 +81,31 @@ export default function WorkflowDetailPage() {
               ))}
             </tbody>
           </table>
+        )}
+      </Card>
+
+      <Card title="Historial de versiones">
+        {(versions.data?.versions.length ?? 0) === 0 ? (
+          <p className="text-sm text-slate-500">Sin versiones.</p>
+        ) : (
+          <ul
+            className="flex flex-col divide-y divide-slate-100 text-sm"
+            data-testid="version-history"
+          >
+            {versions.data?.versions.map((v) => (
+              <li key={v.id} className="flex items-center justify-between py-2">
+                <span className="font-medium">v{v.version}</span>
+                <span className="text-xs text-slate-400">
+                  {new Date(v.createdAt).toLocaleString()}
+                </span>
+                {v.isCurrent ? (
+                  <StatusBadge status="active" />
+                ) : (
+                  <span className="text-xs text-slate-400">histórica</span>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
       </Card>
 

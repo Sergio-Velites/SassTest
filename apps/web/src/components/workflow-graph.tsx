@@ -21,7 +21,7 @@ import '@xyflow/react/dist/style.css';
  * schema (the API already validated it with the engine's full schema).
  */
 
-const graphDefinitionSchema = z.object({
+export const graphDefinitionSchema = z.object({
   nodes: z.array(
     z.object({
       id: z.string(),
@@ -37,7 +37,7 @@ const graphDefinitionSchema = z.object({
 
 export type GraphDefinition = z.infer<typeof graphDefinitionSchema>;
 
-const KIND_STYLES: Record<string, { badge: string; border: string; label: string }> = {
+export const KIND_STYLES: Record<string, { badge: string; border: string; label: string }> = {
   trigger: { badge: 'bg-violet-100 text-violet-700', border: 'border-violet-300', label: '⚡' },
   action: { badge: 'bg-blue-100 text-blue-700', border: 'border-blue-300', label: '🔌' },
   condition: { badge: 'bg-amber-100 text-amber-700', border: 'border-amber-300', label: '🔀' },
@@ -84,7 +84,9 @@ const LAYER_HEIGHT = 130;
 const NODE_SPACING_X = 240;
 
 /** Layered top-down auto-layout: depth = longest path from the trigger. */
-function layoutGraph(definition: GraphDefinition): { nodes: Node<FlowNodeData>[]; edges: Edge[] } {
+export function layoutPositions(
+  definition: GraphDefinition,
+): Map<string, { x: number; y: number }> {
   const outgoing = new Map<string, string[]>();
   const incoming = new Map<string, number>();
   for (const node of definition.nodes) {
@@ -122,10 +124,22 @@ function layoutGraph(definition: GraphDefinition): { nodes: Node<FlowNodeData>[]
     layers.set(d, layer);
   }
 
-  const nodes: Node<FlowNodeData>[] = definition.nodes.map((node) => {
+  const positions = new Map<string, { x: number; y: number }>();
+  for (const node of definition.nodes) {
     const d = depth.get(node.id) ?? 0;
     const layer = layers.get(d) ?? [];
     const index = layer.indexOf(node.id);
+    positions.set(node.id, {
+      x: (index - (layer.length - 1) / 2) * NODE_SPACING_X,
+      y: d * LAYER_HEIGHT,
+    });
+  }
+  return positions;
+}
+
+function layoutGraph(definition: GraphDefinition): { nodes: Node<FlowNodeData>[]; edges: Edge[] } {
+  const positions = layoutPositions(definition);
+  const nodes: Node<FlowNodeData>[] = definition.nodes.map((node) => {
     const config = node.config ?? {};
     const detail =
       node.kind === 'action'
@@ -138,10 +152,7 @@ function layoutGraph(definition: GraphDefinition): { nodes: Node<FlowNodeData>[]
     return {
       id: node.id,
       type: 'workflowNode',
-      position: {
-        x: (index - (layer.length - 1) / 2) * NODE_SPACING_X,
-        y: d * LAYER_HEIGHT,
-      },
+      position: positions.get(node.id) ?? { x: 0, y: 0 },
       data: { name: node.name, kind: node.kind, detail },
     };
   });

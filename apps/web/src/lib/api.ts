@@ -168,6 +168,17 @@ export const approvalsSchema = z.object({
   ),
 });
 
+export const workflowVersionsSchema = z.object({
+  versions: z.array(
+    z.object({
+      id: z.string(),
+      version: z.number(),
+      isCurrent: z.boolean(),
+      createdAt: z.string(),
+    }),
+  ),
+});
+
 export const connectorCatalogSchema = z.object({
   connectors: z.array(
     z.object({

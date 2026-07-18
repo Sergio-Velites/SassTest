@@ -303,3 +303,83 @@ test('viewer role cannot install workflows (FORBIDDEN)', { skip: skipWithoutDb }
     await t.close();
   }
 });
+
+test(
+  'editing publishes a new current version and keeps history',
+  { skip: skipWithoutDb },
+  async () => {
+    const t = await createTestApp();
+    try {
+      const { cookie } = await signupWithOrg(t, 'editor');
+      const created = await t.app.inject({
+        method: 'POST',
+        url: '/workflows',
+        headers: { cookie },
+        payload: { name: 'Editable', definition: MINIMAL_DEFINITION },
+      });
+      const workflowId = created.json().installedWorkflowId as string;
+
+      const edited = {
+        ...MINIMAL_DEFINITION,
+        nodes: [
+          ...MINIMAL_DEFINITION.nodes,
+          { id: 'extra', kind: 'transform', name: 'Extra step', config: {} },
+        ],
+        edges: [...MINIMAL_DEFINITION.edges, { from: 'step', to: 'extra' }],
+      };
+      const update = await t.app.inject({
+        method: 'PUT',
+        url: `/workflows/${workflowId}`,
+        headers: { cookie },
+        payload: { definition: edited },
+      });
+      assert.equal(update.statusCode, 200);
+      assert.equal(update.json().version, 2);
+
+      const detail = await t.app.inject({
+        method: 'GET',
+        url: `/workflows/${workflowId}`,
+        headers: { cookie },
+      });
+      assert.equal(detail.json().currentVersion, 2);
+      assert.equal(detail.json().definition.nodes.length, 3);
+
+      const versions = await t.app.inject({
+        method: 'GET',
+        url: `/workflows/${workflowId}/versions`,
+        headers: { cookie },
+      });
+      assert.equal(versions.statusCode, 200);
+      const list = versions.json().versions as Array<{ version: number; isCurrent: boolean }>;
+      assert.equal(list.length, 2);
+      assert.deepEqual(
+        list.map((v) => [v.version, v.isCurrent]),
+        [
+          [2, true],
+          [1, false],
+        ],
+      );
+
+      // Invalid edits are rejected without touching the version history.
+      const bad = await t.app.inject({
+        method: 'PUT',
+        url: `/workflows/${workflowId}`,
+        headers: { cookie },
+        payload: { definition: { ...MINIMAL_DEFINITION, nodes: [] } },
+      });
+      assert.equal(bad.statusCode, 400);
+
+      // Cross-tenant edit is NOT_FOUND.
+      const { cookie: foreignCookie } = await signupWithOrg(t, 'editor-b');
+      const foreign = await t.app.inject({
+        method: 'PUT',
+        url: `/workflows/${workflowId}`,
+        headers: { cookie: foreignCookie },
+        payload: { definition: MINIMAL_DEFINITION },
+      });
+      assert.equal(foreign.statusCode, 404);
+    } finally {
+      await t.close();
+    }
+  },
+);

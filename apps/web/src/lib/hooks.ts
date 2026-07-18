@@ -17,6 +17,7 @@ import {
   stepsSchema,
   workflowDetailSchema,
   workflowsSchema,
+  workflowVersionsSchema,
 } from './api';
 
 export function useMe() {
@@ -109,6 +110,27 @@ export function useWorkflow(id: string) {
   return useQuery({
     queryKey: ['workflows', id],
     queryFn: () => apiFetch(`/workflows/${id}`, workflowDetailSchema),
+  });
+}
+
+export function useWorkflowVersions(id: string) {
+  return useQuery({
+    queryKey: ['workflows', id, 'versions'],
+    queryFn: () => apiFetch(`/workflows/${id}/versions`, workflowVersionsSchema),
+  });
+}
+
+export function useUpdateWorkflow() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { workflowId: string; definition: Record<string, unknown> }) =>
+      apiFetch(
+        `/workflows/${input.workflowId}`,
+        z.object({ workflowVersionId: z.string(), version: z.number() }),
+        { method: 'PUT', body: { definition: input.definition } },
+      ),
+    onSuccess: (_data, input) =>
+      client.invalidateQueries({ queryKey: ['workflows', input.workflowId] }),
   });
 }
 

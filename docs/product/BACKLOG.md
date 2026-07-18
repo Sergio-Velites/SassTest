@@ -106,11 +106,11 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 
 - [x] Infraestructura OAuth2 genérica: authorization code + PKCE (S256), state firmado HMAC en cookie httpOnly con TTL 10min, callback con exchange, cifrado AES-256-GCM (`SecretCipher` + `DbSecretsStore`, tabla connector_secrets en migración 0003, ref `local:<id>`), helper de refresh, revocación que borra el secreto. Testeado end-to-end contra token endpoint falso (PKCE verificado, state forjado rechazado).
 - [~] API de cuentas de conector completa: GET /connectors (catálogo mock+real con disponibilidad), authorize/callback/list/revoke con audit y tenant scoping. **Falta la UI** (página /connectors en la web).
-- [ ] Slack real (chat.postMessage; OAuth v2) — activable con SLACK_CLIENT_ID/SECRET.
-- [ ] Google real (Gmail readonly + Drive files; OAuth Google) — activable con GOOGLE_CLIENT_ID/SECRET.
-- [ ] Email genérico IMAP/SMTP (sin OAuth; credenciales cifradas) — funciona con cualquier proveedor.
-- [ ] Contabilidad: Holded por API key (y contrato preparado para QuickBooks OAuth).
-- [ ] Selección mock/real por configuración: sin credenciales, los mocks siguen siendo el default; los tests usan mocks siempre.
+- [x] Slack real (`chat.postMessage`, retriabilidad por rate limit) — activable con SLACK_CLIENT_ID/SECRET. Testeado con fetch inyectado.
+- [x] Google real (Gmail readonly: fetch último email con adjunto y decodificación MIME básica; Drive: upload multipart) — activable con GOOGLE_CLIENT_ID/SECRET. Testeado con fetch inyectado; sin verificar contra API viva hasta tener OAuth app.
+- [x] Email genérico: SMTP send (nodemailer) + IMAP fetch con adjunto (imapflow+mailparser), credenciales cifradas conectadas por API key endpoint. SMTP testeado (jsonTransport); IMAP sin verificar contra servidor vivo.
+- [x] Holded por API key (create_entry → documento purchase). Testeado con fetch inyectado; QuickBooks queda como Post-MVP.
+- [x] `createWorkerConnectorRegistry`: mocks siempre; los reales se suman con CONNECTOR_SECRETS_KEY. Resolución de credenciales tenant-scoped con refresh OAuth transparente (persistiendo tokens rotados) y error boundary tipado. El engine pasa `connectorAccountId` desde el config del nodo. Test de integración con BD viva (resolución, cross-tenant, cuenta faltante). Endpoint POST /connector-accounts/:slug/connect para api_key (email/holded).
 - **BLOQUEO EXTERNO**: registrar las apps OAuth (Google Cloud Console, api.slack.com) y pasar client ids/secrets por Secret Manager/.env es del usuario.
 
 ## ⬜ Ciclo 12 — Editor visual de workflows (React Flow)

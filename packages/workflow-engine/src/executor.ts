@@ -444,6 +444,7 @@ async function executeNode(
           string,
           unknown
         >;
+        const accountId = node.config['connectorAccountId'];
         const result = await connector.execute({
           tenant: {
             organizationId: loaded.organizationId as never,
@@ -452,6 +453,7 @@ async function executeNode(
           },
           action: String(node.config['action'] ?? ''),
           params,
+          ...(typeof accountId === 'string' ? { connectorAccountId: accountId } : {}),
         });
         if (!result.ok) {
           return { kind: 'failed', error: result.error, retryable: result.retryable };

@@ -1,6 +1,5 @@
 import { AiGateway, createProviderFromEnv } from '@flowhub/ai-gateway';
 import { loadEnv } from '@flowhub/config';
-import { createMockConnectorRegistry } from '@flowhub/connectors';
 import { createDb, schema } from '@flowhub/database';
 import { BullMqJobQueue, type JobPayload } from '@flowhub/jobs';
 import { createLogger } from '@flowhub/observability';
@@ -8,6 +7,7 @@ import { runExecution, type ExecutorDeps } from '@flowhub/workflow-engine';
 import { and, eq } from 'drizzle-orm';
 
 import { DrizzleAiBudget, DrizzleAiCallSink, DrizzlePromptSource } from './ai.js';
+import { createWorkerConnectorRegistry } from './connectors.js';
 import { DrizzleExecutionStore } from './store.js';
 
 const env = loadEnv();
@@ -46,7 +46,7 @@ const ai = new AiGateway({
 
 const executorDeps: ExecutorDeps = {
   store,
-  connectors: createMockConnectorRegistry(),
+  connectors: createWorkerConnectorRegistry({ db: dbHandle.db, env, logger }),
   ai,
   logger,
   scheduleResume: async (executionId, resumeAt) => {

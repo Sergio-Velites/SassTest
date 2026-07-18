@@ -57,6 +57,7 @@ export interface StoredCredentials {
 export interface SecretRowStore {
   insert(organizationId: string, ciphertext: string): Promise<string>;
   get(organizationId: string, id: string): Promise<string | null>;
+  update(organizationId: string, id: string, ciphertext: string): Promise<void>;
   remove(organizationId: string, id: string): Promise<void>;
 }
 
@@ -79,6 +80,11 @@ export class DbSecretsStore {
     const ciphertext = await this.rows.get(organizationId, id);
     if (!ciphertext) return null;
     return JSON.parse(this.cipher.decrypt(ciphertext)) as StoredCredentials;
+  }
+
+  async update(organizationId: string, ref: string, credentials: StoredCredentials): Promise<void> {
+    const id = ref.startsWith('local:') ? ref.slice(6) : ref;
+    await this.rows.update(organizationId, id, this.cipher.encrypt(JSON.stringify(credentials)));
   }
 
   async delete(organizationId: string, ref: string): Promise<void> {

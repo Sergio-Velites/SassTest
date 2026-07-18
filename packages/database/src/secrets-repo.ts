@@ -27,6 +27,14 @@ export function createSecretRowStore(db: Db) {
         );
       return row?.ciphertext ?? null;
     },
+    async update(organizationId: string, id: string, ciphertext: string): Promise<void> {
+      await db
+        .update(connectorSecrets)
+        .set({ ciphertext })
+        .where(
+          and(eq(connectorSecrets.id, id), eq(connectorSecrets.organizationId, organizationId)),
+        );
+    },
     async remove(organizationId: string, id: string): Promise<void> {
       await db
         .delete(connectorSecrets)

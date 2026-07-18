@@ -38,6 +38,10 @@ test('DbSecretsStore stores encrypted rows scoped by organization', async () => 
       const row = rows.get(id);
       return row && row.org === org ? row.ciphertext : null;
     },
+    async update(org, id, ciphertext) {
+      const row = rows.get(id);
+      if (row && row.org === org) rows.set(id, { org, ciphertext });
+    },
     async remove(org, id) {
       const row = rows.get(id);
       if (row && row.org === org) rows.delete(id);

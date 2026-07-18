@@ -12,3 +12,8 @@ export * from './connector.js';
 export * from './mocks.js';
 export * from './crypto.js';
 export * from './oauth.js';
+export * from './real/types.js';
+export * from './real/slack.js';
+export * from './real/google.js';
+export * from './real/email.js';
+export * from './real/holded.js';

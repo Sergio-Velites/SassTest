@@ -4,8 +4,10 @@ import type { DbSecretsStore, OAuthProviderConfig } from '@flowhub/connectors';
 import {
   buildAuthorizationUrl,
   createMockConnectorRegistry,
+  emailCredentialsSchema,
   exchangeAuthorizationCode,
   generatePkcePair,
+  holdedCredentialsSchema,
 } from '@flowhub/connectors';
 import type { Db } from '@flowhub/database';
 import { schema } from '@flowhub/database';
@@ -107,11 +109,31 @@ export function connectorRoutes(deps: ConnectorsDeps) {
           available: true,
           kind: 'mock' as const,
         }));
-        const realEntries = ['slack', 'google'].map((slug) => ({
-          slug,
-          displayName: slug === 'slack' ? 'Slack' : 'Google (Gmail/Drive)',
-          auth: 'oauth2' as const,
-          available: deps.oauthProviders.has(slug) && deps.secrets !== null,
+        const realEntries = [
+          { slug: 'slack', displayName: 'Slack', auth: 'oauth2' as const, oauth: true },
+          {
+            slug: 'google',
+            displayName: 'Google (Gmail/Drive)',
+            auth: 'oauth2' as const,
+            oauth: true,
+          },
+          {
+            slug: 'email',
+            displayName: 'Email (SMTP/IMAP)',
+            auth: 'api_key' as const,
+            oauth: false,
+          },
+          {
+            slug: 'holded',
+            displayName: 'Holded (contabilidad)',
+            auth: 'api_key' as const,
+            oauth: false,
+          },
+        ].map((c) => ({
+          slug: c.slug,
+          displayName: c.displayName,
+          auth: c.auth,
+          available: deps.secrets !== null && (!c.oauth || deps.oauthProviders.has(c.slug)),
           kind: 'real' as const,
         }));
         return reply.status(200).send({ connectors: [...mockEntries, ...realEntries] });
@@ -245,6 +267,80 @@ export function connectorRoutes(deps: ConnectorsDeps) {
           deps.logger.error('oauth callback failed', { error: (error as Error).message });
           return fail('exchange_failed');
         }
+      },
+    });
+
+    /** api_key connectors (email, holded): credentials posted once, stored encrypted. */
+    const API_KEY_CONNECTORS: Record<string, { schema: z.ZodTypeAny; kind: 'api_key' }> = {
+      email: { schema: emailCredentialsSchema, kind: 'api_key' },
+      holded: { schema: holdedCredentialsSchema, kind: 'api_key' },
+    };
+
+    app.route({
+      method: 'POST',
+      url: '/connector-accounts/:slug/connect',
+      preHandler: [auth, requireTenant('admin')],
+      schema: {
+        tags: ['connectors'],
+        params: z.object({ slug: z.string().min(1).max(40) }),
+        body: z.object({
+          name: z.string().min(1).max(200),
+          credentials: z.record(z.string()),
+        }),
+        response: {
+          201: z.object({ accountId: z.string().uuid() }),
+          404: errorResponseSchema,
+          409: errorResponseSchema,
+        },
+      },
+      handler: async (request, reply) => {
+        const tenant = request.tenant;
+        if (!tenant) throw new AppError('FORBIDDEN', 'An active organization is required');
+        const definition = API_KEY_CONNECTORS[request.params.slug];
+        if (!definition) throw new AppError('NOT_FOUND', 'Connector not found');
+        if (!deps.secrets) {
+          throw new AppError('CONFLICT', 'CONNECTOR_SECRETS_KEY is not configured on the server');
+        }
+        const parsed = definition.schema.safeParse(request.body.credentials);
+        if (!parsed.success) {
+          const detail = parsed.error.issues
+            .map((i: z.ZodIssue) => `${i.path.join('.')}: ${i.message}`)
+            .join('; ');
+          throw new AppError('VALIDATION_ERROR', `Invalid credentials — ${detail}`);
+        }
+        const credentials = parsed.data as Record<string, string>;
+        const secretRef = await deps.secrets.store(tenant.organizationId, {
+          kind: 'api_key',
+          ...(credentials['apiKey'] ? { apiKey: credentials['apiKey'] } : {}),
+          extra: credentials,
+        });
+        const [account] = await deps.db
+          .insert(schema.connectorAccounts)
+          .values({
+            organizationId: tenant.organizationId,
+            connectorSlug: request.params.slug,
+            name: request.body.name,
+            authType: 'api_key',
+            status: 'active',
+            createdBy: tenant.userId,
+          })
+          .returning();
+        if (!account) throw new AppError('INTERNAL_ERROR', 'Failed to create connector account');
+        await deps.db.insert(schema.connectorSecretsMetadata).values({
+          organizationId: tenant.organizationId,
+          connectorAccountId: account.id,
+          secretRef,
+          kind: 'api_key',
+        });
+        await writeAudit(deps.db, {
+          organizationId: tenant.organizationId,
+          actorUserId: tenant.userId,
+          action: 'connector.connected',
+          resourceType: 'connector_account',
+          resourceId: account.id,
+          metadata: { slug: request.params.slug, method: 'api_key' },
+        });
+        return reply.status(201).send({ accountId: account.id });
       },
     });
 

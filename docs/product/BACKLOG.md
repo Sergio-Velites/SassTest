@@ -92,15 +92,50 @@ Al cerrar un ciclo: actualizar `CLAUDE.md` §2/§12, README si aplica, y docs af
 - commitlint en CI si aparecen commits fuera de convención.
 - Job de borrado real de usuarios soft-deleted (GDPR art. 17).
 
+## ⬜ Ciclo 10 — Despliegue GCP (código e IaC completos; activación requiere proyectos GCP del usuario)
+
+- [ ] Dockerfiles de producción para api, worker y web (standalone), construibles y arrancables en local.
+- [ ] Módulos Terraform completos: Cloud Run ×3, Cloud SQL (private IP), Memorystore, Artifact Registry, Secret Manager, service accounts de mínimo privilegio, WIF pool/provider para GitHub Actions. `environments/staging` y `environments/production` instanciables con solo `project_id`.
+- [ ] Job de migraciones (misma imagen del api, comando migrate) previo a cada deploy.
+- [ ] Workflow `deploy.yml`: build+push imágenes por SHA → migrate → deploy staging al mergear a main; production por release con environment protegido. Autenticación WIF, cero claves JSON.
+- [ ] `terraform validate` + `terraform plan` con backend local como smoke (sin aplicar — no hay proyecto GCP aún).
+- [ ] Documentar en GCP_DEPLOYMENT.md los pasos exactos que quedan para el usuario (crear proyectos, bucket de estado, `terraform apply`, variables del repo).
+- **BLOQUEO EXTERNO**: crear proyectos `flowhub-staging`/`flowhub-prod` con billing y ejecutar el apply es del usuario; todo lo demás queda listo.
+
+## ⬜ Ciclo 11 — Framework de conectores reales + implementaciones
+
+- [ ] Infraestructura OAuth2 genérica: authorization code + PKCE, callback en la API, cifrado AES-256-GCM de tokens (clave por env `CONNECTOR_SECRETS_KEY`), refresh automático, revocación; connector_accounts + connector_secrets_metadata ya existen.
+- [ ] API + UI de cuentas de conector: conectar/listar/revocar por organización (audit incluido).
+- [ ] Slack real (chat.postMessage; OAuth v2) — activable con SLACK_CLIENT_ID/SECRET.
+- [ ] Google real (Gmail readonly + Drive files; OAuth Google) — activable con GOOGLE_CLIENT_ID/SECRET.
+- [ ] Email genérico IMAP/SMTP (sin OAuth; credenciales cifradas) — funciona con cualquier proveedor.
+- [ ] Contabilidad: Holded por API key (y contrato preparado para QuickBooks OAuth).
+- [ ] Selección mock/real por configuración: sin credenciales, los mocks siguen siendo el default; los tests usan mocks siempre.
+- **BLOQUEO EXTERNO**: registrar las apps OAuth (Google Cloud Console, api.slack.com) y pasar client ids/secrets por Secret Manager/.env es del usuario.
+
+## ⬜ Ciclo 12 — Editor visual de workflows (React Flow)
+
+- [ ] Vista de grafo read-only en el detalle de workflow (nodos+edges desde la proyección ya persistida).
+- [ ] Edición: añadir/eliminar/conectar nodos, panel de configuración por tipo de nodo (formularios desde los paramsSchema Zod de conectores/kinds).
+- [ ] Validación en vivo con workflowDefinitionSchema y errores señalando el nodo.
+- [ ] Guardar como nueva workflow_version (is_current) reutilizando el write-path existente; historial de versiones visible.
+- [ ] E2e Playwright del flujo editar→guardar→ejecutar.
+
+## ⬜ Ciclo 13 — Billing Stripe (test mode)
+
+- [ ] Integración Stripe Checkout + Customer Portal para suscripciones sobre las tablas plans/subscriptions existentes, tras interfaz `PaymentGateway` (mock para tests/local sin claves).
+- [ ] Webhooks de Stripe (subscription created/updated/cancelled) con verificación de firma.
+- [ ] Enforcement de límites de plan (usuarios, workflows, ejecuciones/mes) leyendo plans.limits + usage_events.
+- [ ] Página de plan/upgrade en la web.
+- **BLOQUEO EXTERNO**: cuenta Stripe y claves (test mode basta para todo el desarrollo) y precios definitivos.
+
 ## Post-MVP (sin ciclo asignado)
 
-- Editor visual con React Flow (drag & drop de nodos).
-- OAuth real: Google (Gmail/Drive), Slack; luego HubSpot, Notion, Stripe…
+- OAuth de más conectores tras el Ciclo 11: HubSpot, Notion, Shopify…
 - Marketplace público: publicación por terceros, reviews, pagos y payouts (Stripe Connect).
-- Billing real: Stripe subscriptions + metered usage.
+- Metered usage sobre Stripe (tras el Ciclo 13).
 - Scheduler (cron triggers) y webhooks entrantes públicos con verificación de firma.
 - Export a BigQuery del event log (la abstracción ya está diseñada — ARCHITECTURE.md §9).
 - SSO/SAML, SCIM, roles personalizados (Enterprise).
-- Despliegue GCP real con Terraform + WIF (docs/deployment/GCP_DEPLOYMENT.md).
 - Row-Level Security de PostgreSQL como segunda capa de aislamiento.
 - Versionado/upgrade de workflows instalados cuando el template publica versión nueva.

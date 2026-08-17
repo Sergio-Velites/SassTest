@@ -15,9 +15,9 @@
   },
   "dependencies": {
     "@flowhub/shared": "workspace:*",
-    "imapflow": "^1.4.7",
-    "mailparser": "^3.9.14",
-    "nodemailer": "^9.0.3",
+    "imapflow": "^1.7.0",
+    "mailparser": "^3.9.15",
+    "nodemailer": "^9.0.5",
     "zod": "^3.24.0"
   },
   "files": [

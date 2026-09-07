@@ -21,12 +21,12 @@
     "@flowhub/shared": "workspace:*",
     "@flowhub/workflow-engine": "workspace:*",
     "drizzle-orm": "^0.45.2",
-    "pg": "^8.22.0"
+    "pg": "^8.23.0"
   },
   "devDependencies": {
-    "@types/pg": "^8.20.0",
+    "@types/pg": "^8.23.1",
     "drizzle-kit": "^0.31.10",
-    "tsx": "^4.23.0"
+    "tsx": "^4.23.13"
   },
   "files": [
     "dist",
